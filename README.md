@@ -20,6 +20,10 @@ La web todavía no está conectada a PostgreSQL ni tiene autenticación de servi
 
 ### Prototipo web
 
+[Demo navegable en GitHub Pages](https://tomasyepes118.github.io/Floatmate/) · usuario `admin` · contraseña `floatmate123`.
+
+La publicación se gestiona con GitHub Actions. Consulte la [guía de publicación](docs/PUBLICACION.md) para activar el sitio y comprobar el despliegue.
+
 Abra [index.html](06_Material_adicional/Codigo_y_bases_de_datos/01_Codigo_web/FloatMate_Web/index.html) en el navegador. Funciona sin instalación ni conexión a internet. Use `admin` / `floatmate123`, exclusivamente para la demostración.
 
 Permite consultar y registrar vehículos, programar viajes y ver un panel de resumen. Los registros se guardan en el navegador; no se comparten entre usuarios o equipos.
