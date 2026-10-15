@@ -5,7 +5,7 @@
 - [x] Índice principal, guías de colaboración y exclusiones de archivos locales.
 - [x] Comprobación de referencias HTML y sintaxis JavaScript.
 - [x] Workflow de comprobación y compilación de C# preparado.
-- [ ] Primera ejecución satisfactoria del workflow en GitHub.
+- [x] Primera ejecución satisfactoria del workflow en GitHub.
 
 ## Entregas y evidencia
 
