@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="FloatMate, prototipo para gestionar una flota de buses"
+    />
+    <title>FloatMate</title>
+    <link rel="icon" href="assets/favicon.svg" />
+    <link rel="stylesheet" href="assets/vendor/bootstrap.min.css" />
+    <link rel="stylesheet" href="assets/styles.css" />
+  </head>
+  <body data-page="dashboard">
+    <aside class="sidebar">
+      <a class="brand" href="dashboard.html"
+        ><span class="mark">F</span> FloatMate</a
+      >
+      <p class="nav-label">OPERACIÓN</p>
+      <nav aria-label="Navegación principal">
+        <a href="dashboard.html" data-nav="dashboard">Resumen</a
+        ><a href="vehiculos.html" data-nav="vehiculos">Vehículos</a
+        ><a href="viajes.html" data-nav="viajes">Viajes</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="avatar">TY</div>
+        <div>Tomas Yepes<small>Administrador</small></div>
+        <a href="index.html" id="logout">Salir</a>
+      </div>
+    </aside>
+    <div class="workspace">
+      <header class="topbar">
+        <span>Centro de operaciones</span
+        ><span class="demo">Datos de demostración</span>
+      </header>
+      <main>
+        <div class="page-title">
+          <div>
+            <p class="eyebrow">FLOATMATE / RESUMEN DE LA FLOTA</p>
+            <h1>Resumen de la flota</h1>
+            <p>
+              Revisa la disponibilidad y los próximos viajes de la operación.
+            </p>
+          </div>
+        </div>
+        <section class="row g-3 mb-4" aria-label="Indicadores">
+          <div class="col-6 col-xl-3">
+            <article class="metric">
+              <span>Vehículos registrados</span
+              ><strong id="total-vehicles">0</strong
+              ><small>Inventario de la flota</small>
+            </article>
+          </div>
+          <div class="col-6 col-xl-3">
+            <article class="metric">
+              <span>Disponibles</span><strong id="available-vehicles">0</strong
+              ><small>Listos para asignar</small>
+            </article>
+          </div>
+          <div class="col-6 col-xl-3">
+            <article class="metric">
+              <span>Viajes programados</span
+              ><strong id="scheduled-trips">0</strong
+              ><small>Programación registrada</small>
+            </article>
+          </div>
+          <div class="col-6 col-xl-3">
+            <article class="metric">
+              <span>En mantenimiento</span
+              ><strong id="maintenance-vehicles">0</strong
+              ><small>Fuera de operación</small>
+            </article>
+          </div>
+        </section>
+        <section class="row g-4">
+          <div class="col-xl-8">
+            <article class="panel">
+              <div class="panel-heading">
+                <h2>Próximos viajes</h2>
+                <a href="viajes.html">Ver programación</a>
+              </div>
+              <div class="table-responsive">
+                <table class="table align-middle">
+                  <thead>
+                    <tr>
+                      <th>Ruta</th>
+                      <th>Salida</th>
+                      <th>Vehículo</th>
+                      <th>Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dashboard-trips"></tbody>
+                </table>
+              </div>
+            </article>
+          </div>
+          <div class="col-xl-4">
+            <article class="panel mb-4">
+              <h2>Estado de los vehículos</h2>
+              <div id="fleet-status"></div>
+            </article>
+            <article class="quick-panel">
+              <h2>Organiza tu operación</h2>
+              <p>Consulta los buses y prepara la programación de la flota.</p>
+              <a class="btn btn-light" href="vehiculos.html"
+                >Consultar vehículos</a
+              >
+            </article>
+          </div>
+        </section>
+      </main>
+      <footer>FloatMate · Prototipo académico · Programación Web</footer>
+    </div>
+    <script src="assets/app.js"></script>
+  </body>
+</html>

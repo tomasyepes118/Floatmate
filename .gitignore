@@ -1,0 +1,32 @@
+# Herramientas locales y archivos temporales
+/tmp/
+/06_Material_adicional/Herramientas_y_temporales/
+**/node_modules/
+**/__pycache__/
+*.py[cod]
+**/.venv/
+**/bin/
+**/obj/
+**/.vs/
+*.user
+*.suo
+.DS_Store
+Thumbs.db
+*.log
+
+# Paquetes duplicados: se versionan sus fuentes y documentos descomprimidos
+*.zip
+*.nupkg
+
+# Configuración y credenciales de cada equipo
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+.vscode/
+
+# Resultados de las comprobaciones
+/artifacts/

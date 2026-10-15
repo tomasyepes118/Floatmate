@@ -1,0 +1,50 @@
+FLOATMATE BDOO - INFORME DE VERIFICACION
+Fecha de preparación: 5 de octubre de 2026.
+
+ENTORNO
+Se usó PostgreSQL 18.3 mediante PGlite 0.5.8 (compilación embebida WASM),
+ejecutando SQL y PL/pgSQL reales en un entorno temporal independiente.
+No se conectó a las bases del estudiante ni se modificaron sus datos.
+
+DATOS DE PRUEBA
+Se ejecutaron los archivos originales de modelo y datos locales de Norte.
+Se repitió el proceso con los archivos originales de modelo y datos de Sur.
+Cada base temporal recibió 15 registros por tabla del modelo previo.
+
+RESULTADOS
+PASS: instalación del esquema, tipos, dominios, clases y relaciones.
+PASS: instalación y reinstalación de métodos, vistas y triggers.
+PASS: importación de los datos originales de ambos fragmentos.
+PASS: reimportación sin duplicar datos ni modificar los UUID.
+PASS: todas las consultas de sustentación.
+PASS: validación de identidad inmutable y jerarquía de herencia.
+PASS: rechazo de valores compuestos inválidos y de instancias del padre.
+PASS: rechazo de identidad sin instancia y de sobrecupo.
+PASS: rechazo de inicio sin control, inicio autorizado y cierre del viaje.
+PASS: navegación JSONB y registro de auditoría.
+PASS: reversión de las modificaciones de prueba.
+PASS: demostración guiada completa.
+PASS: ejemplo de creación temporal de un vehículo.
+PASS: puente opcional con 30 vehículos y fichas compuestas.
+
+CONTEOS POR FRAGMENTO DESPUES DE LAS PRUEBAS
+Vehículos de origen: 15.
+Objetos vehículo: 15.
+Filas físicas en el padre abstracto: 0.
+Bus urbano: 5.
+Bus intermunicipal: 5.
+Microbús: 5.
+Conductores, rutas, viajes y mantenimientos: 15 cada uno.
+
+ALCANCE DEL PUENTE BDD
+Las tablas remotas se simularon localmente con los datos del otro fragmento.
+Se usaron las vistas globales del proyecto para comprobar las proyecciones.
+Esto verifica el SQL y los tipos compuestos; no verifica la conexión de red,
+las contraseñas, pg_hba.conf, los puertos ni postgres_fdw de tu instalación.
+
+ALCANCE DE LA VERIFICACION
+No se ejecutó pgAdmin ni un servicio nativo de PostgreSQL de tu PC.
+El archivo 00 comprueba en tu PC que elegiste floatmate_norte/floatmate_sur.
+El archivo 05 proporciona las pruebas para ejecutar en tu propia base.
+Las pruebas requieren vehículo y conductor disponibles, licencia vigente y ruta activa.
+Este informe no sustituye la sustentación ni una rúbrica adicional del profesor.

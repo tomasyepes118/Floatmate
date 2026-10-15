@@ -1,0 +1,92 @@
+FLOATMATE - PREGUNTAS Y RESPUESTAS PARA LA ACTIVIDAD BDOO
+
+1. ¿Qué es una base de datos orientada a objetos?
+Es un modelo de persistencia que representa entidades como objetos con identidad, atributos y comportamiento. Las clases definen su estructura y las relaciones permiten conectar objetos. El profesor presenta este enfoque y sus conceptos; nosotros aplicamos su equivalente objeto-relacional en PostgreSQL.
+
+2. ¿PostgreSQL es una BDOO pura?
+PostgreSQL es un sistema objeto-relacional. Mantiene tablas y SQL, y añade tipos compuestos, herencia de tablas, funciones personalizadas y datos JSON. Esto coincide con las diapositivas 7 y 8 del profesor.
+
+3. ¿Cuál es la diferencia entre BDD y BDOO?
+BDD trata la ubicación de la información en varios nodos. En FloatMate se demuestra con Norte, Sur y FDW. BDOO trata la representación y el comportamiento de la información mediante objetos, clases, identidad y métodos. Pueden coexistir en el mismo proyecto.
+
+4. ¿Dónde están los objetos de esta actividad?
+En el esquema floatmate_objetos de floatmate_norte. Los tipos están en Types, los dominios en Domains, las clases persistentes en Tables, las funciones en Functions y los procedimientos en Procedures. Los triggers están asociados a sus tablas. Ver public en pgAdmin no significa que el módulo esté allí.
+
+5. ¿Cuál es la clase y cuál es el objeto?
+La clase es el molde, por ejemplo BusUrbano. La tabla y su tipo de fila representan ese molde. Un objeto es una instancia concreta almacenada en la tabla, por ejemplo el bus FTA101 con su UUID. En PostgreSQL explicamos esta representación como objeto-relacional, no como una clase Java/C# literal.
+
+6. ¿Qué atributos tiene un vehículo?
+UUID, terminal, clase, placa, ficha técnica, estado y colección de equipamiento. Cada subclase añade datos: puertas/accesibilidad en urbano, aire/bodega en intermunicipal y servicio especial en microbús. Los atributos nuevos sin fuente anterior usan valores de demostración.
+
+7. ¿Cómo implementaron la herencia?
+Con INHERITS: bus_urbano, bus_intermunicipal y microbus heredan de vehiculo. Comparten atributos y restricciones CHECK/NOT NULL. La consulta sobre vehiculo incluye filas de los hijos. Los métodos se implementan como funciones externas; no se heredan automáticamente como métodos miembros.
+
+8. ¿Por qué SELECT ONLY vehiculo devuelve cero?
+Porque el padre es abstracto en nuestro diseño y un trigger prohíbe insertar instancias directamente allí. Todos los vehículos están almacenados en las subclases. ONLY excluye los hijos, mientras que SELECT normal los incluye.
+
+9. ¿La llave primaria del padre protege los registros de los hijos?
+No. PostgreSQL no hereda ni extiende automáticamente PRIMARY KEY, UNIQUE o FOREIGN KEY a toda la jerarquía. Por eso cada hijo tiene sus propias restricciones y una FK hacia identidad_vehiculo. El registro central proporciona la identidad y placa únicas de toda la jerarquía.
+
+10. ¿Qué es el OID y cómo lo implementaron?
+Es la identidad independiente de los atributos del objeto. Usamos una columna oid de tipo UUID con gen_random_uuid(), PK y trigger de inmutabilidad. El UUID permanece al cambiar estado o kilometraje. No utilizamos el tipo oid del catálogo, ni tableoid, ni la placa como identidad del objeto.
+
+11. ¿Para qué sirve tableoid?
+Es una columna del sistema que identifica la tabla física de la que proviene una fila. La convertimos a regclass para mostrar si el objeto está en bus_urbano, bus_intermunicipal o microbus. Identifica la tabla, no la identidad persistente de un objeto individual.
+
+12. ¿Cómo evitan tener una identidad sin su objeto?
+Una restricción diferida comprueba al finalizar la transacción que cada registro de identidad_vehiculo tenga exactamente una instancia en una subclase. Así podemos insertar registro e instancia en la misma transacción y verificar su coherencia en el COMMIT.
+
+13. ¿Qué es un tipo compuesto?
+Es un tipo que agrupa atributos tipados. t_contacto contiene teléfono y correo; t_licencia contiene número, categoría y vencimiento; t_ficha contiene marca, modelo, capacidad y kilometrajes. Se accede a los campos con expresiones como (contacto).telefono.
+
+14. ¿Un CREATE TYPE permite restricciones CHECK internas?
+No para los tipos compuestos definidos de esta manera. Creamos dominios sobre esos tipos para validar sus campos. Por ejemplo, d_ficha impide capacidad cero y kilometraje negativo, incluso al construir un valor compuesto fuera de una tabla.
+
+15. ¿Cómo implementaron encapsulamiento?
+Los procedimientos agrupan la lógica del negocio. sp_iniciar_viaje verifica el viaje y modifica sus objetos relacionados mediante una sola operación externa. Los dominios y triggers refuerzan validaciones. No afirmamos tener atributos privados ni permisos de producción: usamos el usuario actual, sin crear roles, y un administrador conserva acceso directo.
+
+16. ¿Qué es un método en esta implementación?
+Es una función o procedimiento que opera sobre los objetos. fn_describir y fn_costo reciben un tipo de fila concreto. sp_programar_viaje, sp_aprobar_control, sp_iniciar_viaje y sp_cerrar_viaje representan comportamiento de los objetos del negocio.
+
+17. ¿Cómo muestran polimorfismo?
+Como demostración adicional, usamos sobrecarga: fn_describir y fn_costo tienen tres firmas según el tipo de argumento. Una llamada con bus_urbano ejecuta su versión y una llamada con microbus ejecuta otra. Es selección según el tipo del argumento SQL; no afirmamos tener despacho virtual automático como en Java/C#.
+
+18. ¿Por qué utilizan JSONB?
+Para conservar expedientes flexibles y devolver el objeto viaje con sus objetos asociados. fn_viaje_json devuelve datos del viaje, vehículo, conductor y ruta, conservando UUID que permiten conocer sus relaciones. JSONB por sí solo no demuestra toda la orientación a objetos: también mostramos tipos, métodos, identidad y herencia.
+
+19. ¿Qué son composición y asociación?
+Composición de atributos: Conductor contiene Contacto y Licencia; Vehículo contiene Ficha. Asociación: Viaje referencia Vehículo, Conductor y Ruta mediante UUID y claves foráneas. Las colecciones se representan con arreglos, como las paradas de una ruta.
+
+20. ¿Qué significa persistencia?
+Los objetos se almacenan en tablas dentro de transacciones confirmadas. Al cerrar pgAdmin y volver a conectarse, se recuperan los mismos UUID y atributos. Los objetos no existen solamente en la memoria de la aplicación. La demostración con ROLLBACK se revierte intencionalmente; la carga inicial del archivo 03 sí queda confirmada.
+
+21. ¿Qué pasa si repito la importación?
+El archivo 03 consulta la marca de instalación. Si ya importó, no duplica los datos y conserva sus UUID. Es una instantánea; no sincroniza automáticamente las modificaciones posteriores del modelo relacional.
+
+22. ¿Los métodos nuevos modifican las tablas anteriores?
+No. Trabajan en floatmate_objetos. El modelo distribuido anterior permanece independiente. Convertir el módulo en la única fuente operativa requeriría definir una migración y actualizar la aplicación.
+
+23. ¿Debo ejecutar todo en Norte y Sur?
+Empiezo en Norte para demostrar la actividad. Si también quiero objetos persistentes locales en Sur, ejecuto 00-05 allí leyendo los datos locales. El archivo opcional 06 solo se usa en Norte con la federación existente. No importa los UUID del esquema nuevo de Sur: muestra proyecciones tipadas sobre el modelo global previo.
+
+24. ¿Cuántos registros debo ver?
+Con la carga inicial: 15 vehículos visibles desde el padre, 5 por cada subclase, 15 conductores, 15 rutas, 15 viajes y 15 mantenimientos. El padre físico contiene cero. Si el modelo original tiene más registros, la carga refleja esos datos. El PDF de esta actividad no establece un mínimo nuevo de registros por subclase.
+
+25. ¿Las pruebas dejan cambios?
+Las pruebas y la demostración terminan con ROLLBACK. Los viajes y modificaciones del ensayo desaparecen; los objetos de la importación inicial siguen almacenados. Pueden quedar saltos en la numeración de auditoría porque las secuencias no revierten sus incrementos.
+
+26. ¿Cómo presento el trabajo en dos minutos?
+Ampliamos FloatMate con un modelo objeto-relacional en PostgreSQL. Cada vehículo tiene identidad UUID inmutable y pertenece a una subclase que hereda de Vehículo. Los tipos compuestos agrupan contacto, licencia y ficha. Las funciones describen objetos y calculan costos; los procedimientos encapsulan programación, inicio y cierre de viajes. Los UUID enlazan los objetos y JSONB permite recuperarlos juntos. Todo está organizado en floatmate_objetos y puede coexistir con la federación Norte-Sur de la actividad anterior.
+
+ORDEN SUGERIDO PARA SUSTENTAR
+1. Mostrar el esquema floatmate_objetos.
+2. Mostrar v_flota y el UUID de un vehículo.
+3. Mostrar SELECT desde vehiculo y SELECT ONLY desde vehiculo.
+4. Mostrar tipos compuestos y atributos de las tres subclases.
+5. Mostrar v_comportamiento con métodos sobrecargados.
+6. Mostrar fn_viaje_json y sus objetos asociados.
+7. Ejecutar la demostración guiada, incluido el rechazo del cambio de OID.
+8. Terminar con ROLLBACK.
+9. Si FDW está conectado, mostrar v_ficha_global_en_vivo con NOR y SUR.
+
+Basado en el PDF del profesor y en la documentación oficial de PostgreSQL 18.
