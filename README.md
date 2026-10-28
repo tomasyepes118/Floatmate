@@ -1,84 +1,162 @@
 # FloatMate
 
-Gestión de flotas de buses: vehículos, viajes, rutas y mantenimiento.
+Aplicación para gestionar flotas de buses. Esta primera versión incluye el **login y el resumen de la flota**, siguiendo los mockups del proyecto.
 
-Proyecto Integrador de Aula (PIA) de Programación Web, Ingeniería de Software y Bases de Datos II. Este repositorio reúne código, modelos de datos, diagramas y evidencias de las entregas. La organización conserva los nombres de las entregas para facilitar la revisión de la profesora.
+El acceso se valida en Laravel y la sesión se conserva en archivos locales. El panel presenta datos de demostración. **Esta versión no utiliza base de datos.**
 
-## Estado del proyecto
+![Resumen de FloatMate](docs/capturas/02-resumen-pc.png)
 
-| Componente | Estado actual |
-| --- | --- |
-| Web | Prototipo HTML, CSS, Bootstrap y JavaScript con almacenamiento en el navegador |
-| POO | Aplicación de consola C# / .NET 8 con herencia, interfaces y polimorfismo |
-| Datos | Scripts PostgreSQL para nodos Norte/Sur, federación, programación avanzada, BDOO y DWH |
-| Diseño | Diagramas entidad-relación, casos de uso, clases y objetos; fuentes DOT y SVG |
-| Documentación | Factibilidad, informes, capturas y guías de ejecución |
+## Estado actual
 
-La web todavía no está conectada a PostgreSQL ni tiene autenticación de servidor. No se presenta como un sistema listo para producción. Los documentos de requerimientos I, II y III, los manuales y el plan completo de pruebas siguen señalados como pendientes donde no existe evidencia.
+- Acceso con usuario y contraseña, mensajes de error y opción de mostrar u ocultar la contraseña.
+- Sesión verificada en el servidor, resumen protegido y cierre de sesión.
+- Indicadores, próximos viajes y estado de los vehículos con datos de ejemplo.
+- Interfaz adaptada a computador y móvil.
 
-## Inicio rápido
+Vehículos y Viajes aparecen en el menú para conservar el diseño. Sus pantallas y formularios quedan para otra entrega; los controles están deshabilitados.
 
-### Prototipo web
+## Tecnologías
 
-[Demo navegable en GitHub Pages](https://tomasyepes118.github.io/Floatmate/) · usuario `admin` · contraseña `floatmate123`.
+| Parte | Tecnologías |
+|---|---|
+| Interfaz | Next.js 16, React 19, JavaScript y JSX |
+| Servidor | Laravel 13 y PHP 8.4 |
+| Estilos | CSS y Bootstrap local |
+| Pruebas | PHPUnit y Playwright |
 
-La publicación se gestiona con GitHub Actions. Consulte la [guía de publicación](docs/PUBLICACION.md) para activar el sitio y comprobar el despliegue.
+Las versiones exactas están fijadas en `frontend/package-lock.json` y `backend/composer.lock`.
 
-Abra [index.html](06_Material_adicional/Codigo_y_bases_de_datos/01_Codigo_web/FloatMate_Web/index.html) en el navegador. Funciona sin instalación ni conexión a internet. Use `admin` / `floatmate123`, exclusivamente para la demostración.
+## Estructura
 
-Permite consultar y registrar vehículos, programar viajes y ver un panel de resumen. Los registros se guardan en el navegador; no se comparten entre usuarios o equipos.
-
-El [mockup de la entrega de diagramas](05_Tareas_adicionales/2026-10-13_Diagramas_y_mockup/Mockup/01_Parte_I/01_Prototipo_navegable/index.html) se conserva como evidencia de esa entrega.
-
-### Consola C#
-
-Instale el SDK de .NET 8 y ejecute desde la raíz:
-
-```powershell
-dotnet run --project "05_Tareas_adicionales/POO_Herencia_y_polimorfismo/FloatMate.POO/FloatMate.Console/FloatMate.Console.csproj"
+```text
+Floatmate/
+├── frontend/        Login, resumen, componentes y estilos de Next.js
+├── backend/         Acceso, sesión y API de Laravel
+├── docs/            Documentación, capturas y resultados de pruebas
+├── .github/         Comprobaciones automáticas del proyecto
+├── .gitignore       Exclusiones de dependencias y archivos locales
+└── README.md        Presentación y pasos para comenzar
 ```
 
-La demostración evalúa vehículos para rutas urbanas e intermunicipales. Consulte la [guía de POO](05_Tareas_adicionales/POO_Herencia_y_polimorfismo/FloatMate.POO/README.md).
+## Requisitos
 
-### PostgreSQL
+- Node.js **22 o superior**, con npm.
+- PHP **8.4**, con las extensiones que requiere Laravel.
+- Composer **2**.
 
-Empiece por la [guía de ejecución con roles](06_Material_adicional/Codigo_y_bases_de_datos/02_Base_de_datos/01_PostgreSQL_con_roles/README_EJECUCION.md). Requiere PostgreSQL 14 o superior y permisos para crear bases, roles y extensiones. Ejecute los scripts en el orden de esa guía sobre una instalación de laboratorio.
+Comprueba las herramientas desde una terminal de VS Code:
 
-La [variante sin roles](06_Material_adicional/Codigo_y_bases_de_datos/02_Base_de_datos/02_PostgreSQL_sin_roles/LEEME_PASO_A_PASO.md) es una alternativa; no mezcle las dos secuencias en una misma instalación. La [federación CSV y DWH](06_Material_adicional/Codigo_y_bases_de_datos/02_Base_de_datos/03_Federacion_CSV_DWH/LEEME_IMPLEMENTACION.md) tiene requisitos y orden propios.
+```powershell
+node --version
+npm --version
+php --version
+composer --version
+```
 
-## Mapa del repositorio
+Si alguna no se reconoce, instala la herramienta o revisa su configuración en `PATH` y abre una terminal nueva. La primera instalación de dependencias necesita internet.
 
-| Carpeta | Contenido |
-| --- | --- |
-| `01_Analisis_de_factibilidad/` | Documento de factibilidad |
-| `02_Requerimientos_Parte_I/` | Estado de la entrega I |
-| `03_Requerimientos_Parte_II/` | Estado de la entrega II |
-| `04_Diagramas_UML/` | Diagramas vigentes y fuentes editables |
-| `05_Tareas_adicionales/` | Informes, mockup, POO y guías académicas |
-| `06_Material_adicional/Codigo_y_bases_de_datos/` | Web, SQL y referencias de pruebas |
-| `06_Material_adicional/Por_completar/` | Documentos todavía pendientes |
-| `06_Material_adicional/Archivo/` | Versiones anteriores e inventarios históricos |
-| `docs/` | Arquitectura, criterios de versionado y próximos pasos |
-| `scripts/` | Comprobaciones del repositorio |
+## Instalación inicial
 
-Los inventarios de `Archivo/` corresponden a la organización anterior y pueden mencionar archivos excluidos o ya reubicados. Los ZIP, herramientas descargadas y temporales se conservan en el equipo y quedan fuera de Git.
+Clona este repositorio o descarga y descomprime su ZIP. En **VS Code → Archivo → Abrir carpeta**, abre la carpeta que contiene `frontend` y `backend`.
+
+En **Terminal → Nueva terminal**, desde la raíz del proyecto:
+
+```powershell
+cd backend
+composer install
+Copy-Item .env.example .env
+php artisan key:generate
+```
+
+Abre una segunda terminal desde la raíz:
+
+```powershell
+cd frontend
+npm ci
+Copy-Item .env.example .env.local
+```
+
+Estos pasos se hacen al preparar una copia nueva. Conserva los archivos `.env` generados; no hace falta copiarlos ni cambiar la clave en cada inicio. No ejecutes migraciones ni crees una base de datos.
+
+> En macOS y Linux, usa `cp` en lugar de `Copy-Item`.
+
+## Cómo abrir FloatMate desde VS Code
+
+### 1. Iniciar Laravel
+
+Abre **Terminal → Nueva terminal**. Desde la raíz del proyecto, ejecuta:
+
+```powershell
+cd backend
+php artisan serve --host=127.0.0.1 --port=8000
+```
+
+Cuando aparezca `Server running on http://127.0.0.1:8000`, el servidor estará listo. **Deja esa terminal abierta.**
+
+### 2. Iniciar Next.js
+
+Pulsa el botón **+** del panel de terminales para abrir otra terminal. Desde la raíz, ejecuta:
+
+```powershell
+cd frontend
+npm run dev
+```
+
+Si esa terminal se abre dentro de `backend`, usa `cd ../frontend` en lugar de `cd frontend`.
+
+Cuando aparezca `http://127.0.0.1:3000`, la interfaz estará lista. **Deja también esa terminal abierta.**
+
+### 3. Abrir el navegador
+
+Mantén presionada **Ctrl** y haz clic en el enlace de Next.js, o abre [http://127.0.0.1:3000](http://127.0.0.1:3000).
+
+| Campo | Acceso de demostración |
+|---|---|
+| Usuario | `admin` |
+| Contraseña | `floatmate123` |
+
+El puerto **3000** muestra FloatMate; el **8000** atiende las solicitudes de Laravel. Usa siempre `127.0.0.1` para mantener la sesión en el mismo dominio. Este proyecto se inicia con esos dos servidores, no con Live Server.
+
+### 4. Detener la aplicación
+
+Presiona **Ctrl + C** en cada una de las dos terminales.
 
 ## Comprobaciones
 
-Con Node.js 22 o superior:
+Pruebas del servidor, desde `backend`:
 
 ```powershell
-node scripts/check-repository.mjs
+composer test
 ```
 
-Comprueba referencias locales en HTML, sintaxis JavaScript y archivos que no deben publicarse. GitHub Actions ejecuta estas comprobaciones y compila y ejecuta la consola con .NET 8 en cada push o pull request. No valida la ejecución de PostgreSQL ni sustituye las pruebas funcionales de la web.
+Compilación de la interfaz, desde `frontend`:
 
-Consulte [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md) y el [plan de evolución](docs/ROADMAP.md).
+```powershell
+npm run build
+```
 
-## Equipo y uso
+Recorrido en navegador, con Laravel y Next.js iniciados, desde `frontend`:
 
-- Tomás Yepes
-- Cristian Benites
-- Mateo Gallo
+```powershell
+npx playwright install chromium
+npm run test:e2e
+```
 
-No se ha concedido una licencia general de código abierto. La licencia incluida de Bootstrap se conserva junto a sus archivos de terceros.
+GitHub Actions compila Next.js y ejecuta las pruebas de Laravel en cada push y pull request.
+
+## Documentación
+
+- [Guía completa del proyecto](docs/DOCUMENTACION.md): estructura, funcionamiento, configuración y solución de problemas.
+- [Resultados de las comprobaciones](docs/VALIDACION.md).
+- [Capturas de PC y móvil](docs/capturas).
+- `docs/Documentacion.html`: guía para abrir localmente en un navegador.
+
+## Próximos pasos
+
+Desarrollar las pantallas de los módulos, sus formularios, el sistema de usuarios y permisos y la conexión a PostgreSQL. Esas funciones todavía no forman parte de esta versión.
+
+## Equipo
+
+Tomás Yepes · Cristian Benites · Mateo Gallo.
+
+Proyecto académico en desarrollo. Las credenciales son públicas y sirven para probar la demostración. Las dependencias conservan sus licencias; FloatMate no concede una licencia general de código abierto.

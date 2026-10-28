@@ -1,3 +1,0 @@
-Los cuatro diagramas están separados por carpetas.
-El informe PDF, el Word editable y la entrega completa de hoy están en:
-../05_Tareas_adicionales/2026-10-13_Diagramas_y_mockup/

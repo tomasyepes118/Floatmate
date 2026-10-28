@@ -1,8 +1,0 @@
-﻿Bloque;Entrega;Porcentaje;Fecha;Carpeta;Estado_archivos
-Bloque 1;Factibilidad y requerimientos I;15 %;2026-08-27;01_Requerimientos_y_factibilidad_30_por_ciento/01_Factibilidad_y_requerimientos_Parte_I_15_por_ciento/01_Analisis_de_factibilidad;"Factibilidad disponible; requerimientos I pendiente"
-Bloque 1;Requerimientos II;15 %;2026-09-09;01_Requerimientos_y_factibilidad_30_por_ciento/02_Requerimientos_Parte_II_15_por_ciento;Pendiente de localizar o elaborar
-Bloque 2;Diagramas UML;15 %;2026-09-24;02_Diagramas_Mockup_y_requerimientos_30_por_ciento/01_Diagramas_UML_15_por_ciento;Disponible
-Bloque 2;Mockup;10 %;2026-10-15;02_Diagramas_Mockup_y_requerimientos_30_por_ciento/02_Mockup_10_por_ciento;Parte I disponible
-Bloque 2;Requerimientos III;5 %;2026-10-29;02_Diagramas_Mockup_y_requerimientos_30_por_ciento/03_Requerimientos_Parte_III_5_por_ciento;Pendiente de localizar o elaborar
-Bloque 3;Código y plan de pruebas;20 %;2026-11-12;03_Codigo_pruebas_y_manuales_40_por_ciento/01_Codigo_y_plan_de_pruebas_20_por_ciento;"Código disponible; plan formal pendiente"
-Bloque 3;Manuales usuario técnico MTTO;20 %;2026-11-19;03_Codigo_pruebas_y_manuales_40_por_ciento/02_Manuales_usuario_tecnico_y_MTTO_20_por_ciento;Pendientes de localizar o elaborar

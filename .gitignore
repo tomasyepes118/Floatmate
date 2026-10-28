@@ -1,32 +1,32 @@
-# Herramientas locales y archivos temporales
-/tmp/
-/06_Material_adicional/Herramientas_y_temporales/
+# Dependencias y compilaciones
 **/node_modules/
-**/__pycache__/
-*.py[cod]
-**/.venv/
-**/bin/
-**/obj/
-**/.vs/
-*.user
-*.suo
+**/.next/
+**/vendor/
+**/out/
+**/coverage/
+**/*.tsbuildinfo
+
+# Configuración privada de cada equipo
+**/.env
+**/.env.*
+!**/.env.example
+/.vscode/
 .DS_Store
 Thumbs.db
+
+# Archivos generados por Laravel y las pruebas
+**/bootstrap/cache/*.php
+**/storage/framework/sessions/*
+**/storage/framework/cache/data/*
+**/storage/framework/views/*
+**/storage/logs/*
+**/.phpunit.cache/
+**/test-results/
+**/playwright-report/
 *.log
+!**/.gitkeep
 
-# Paquetes duplicados: se versionan sus fuentes y documentos descomprimidos
+# Paquetes y respaldos locales
 *.zip
-*.nupkg
-
-# Configuración y credenciales de cada equipo
-.env
-.env.*
-!.env.example
-*.pem
-*.key
-*.pfx
-*.p12
-.vscode/
-
-# Resultados de las comprobaciones
-/artifacts/
+*.backup
+*.dump
