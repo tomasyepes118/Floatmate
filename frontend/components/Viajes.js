@@ -53,7 +53,7 @@ export default function Viajes({ iniciales }) {
       {lista.length ? <div className="table-responsive"><table className="table align-middle"><thead><tr><th>Ruta</th><th>Conductor</th><th>Vehículo</th><th>Salida</th><th>Pasajeros</th><th>Estado</th></tr></thead><tbody>{lista.map(v => <tr key={v.id}><td data-label="Ruta"><strong>{v.ruta.origen} - {v.ruta.destino}</strong><small>{v.ruta.codigo} · V-{v.id}</small></td><td data-label="Conductor">{v.conductor.nombre}</td><td data-label="Vehículo">{v.vehiculo.placa}</td><td data-label="Salida">{fecha(v.salida)}</td><td data-label="Pasajeros">{v.pasajeros}</td><td data-label="Estado"><span className={`status status-${claseEstado(v.estado)}`}>{estadosViaje[v.estado]}</span></td></tr>)}</tbody></table></div> : <p className="empty-state" role="status">No hay viajes que coincidan con la búsqueda.</p>}
     </article>
     <Dialogo abierto={abierto} titulo="Programar viaje" cerrar={() => setAbierto(false)} ocupado={ocupado}>
-      <form onSubmit={guardar} aria-busy={ocupado}>
+      <form onSubmit={guardar} onChange={evento => { const nombre=evento.target.name; setError(''); setErrores(actuales => { const copia={...actuales}; delete copia[nombre]; return copia; }); }} aria-busy={ocupado}>
         <fieldset disabled={ocupado}>
           <Campo nombre="ruta_id" etiqueta="Ruta activa" errores={errores}><select {...campo('ruta_id')} className="form-select" required value={rutaId} onChange={e => setRutaId(e.target.value)}><option value="">Selecciona una ruta</option>{rutas.filter(r => r.activa).map(r => <option key={r.id} value={r.id}>{r.origen} - {r.destino}</option>)}</select></Campo>
           {ruta && <p className="route-detail">{ruta.codigo} · {ruta.distancia} km · {ruta.duracion} minutos</p>}

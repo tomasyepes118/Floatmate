@@ -49,7 +49,7 @@ export default function Vehiculos({ iniciales }) {
       {lista.length ? <div className="table-responsive"><table className="table align-middle"><thead><tr><th>Placa</th><th>Modelo</th><th>Capacidad</th><th>Kilometraje</th><th>Estado</th></tr></thead><tbody>{lista.map(v => <tr key={v.id}><td data-label="Placa"><strong>{v.placa}</strong><small>{v.codigo}</small></td><td data-label="Modelo"><div>{v.marca} {v.modelo}<small>{tiposVehiculo[v.tipo]}</small></div></td><td data-label="Capacidad">{v.capacidad} pasajeros</td><td data-label="Kilometraje">{numero(v.kilometraje)} km</td><td data-label="Estado"><span className={`status status-${claseEstado(v.estado)}`}>{estadosVehiculo[v.estado]}</span></td></tr>)}</tbody></table></div> : <p className="empty-state" role="status">No hay vehículos que coincidan con la búsqueda.</p>}
     </article>
     <Dialogo abierto={abierto} titulo="Registrar vehículo" cerrar={() => setAbierto(false)} ocupado={ocupado}>
-      <form onSubmit={guardar} aria-busy={ocupado}>
+      <form onSubmit={guardar} onChange={evento => { const nombre=evento.target.name; setError(''); setErrores(actuales => { const copia={...actuales}; delete copia[nombre]; return copia; }); }} aria-busy={ocupado}>
         <fieldset disabled={ocupado}>
           <div className="operation-grid">
             <Campo nombre="placa" etiqueta="Placa" errores={errores}><input {...campo('placa')} className="form-control" required pattern="[A-Za-z]{3}[0-9]{3}" maxLength={6} placeholder="ABC123" autoComplete="off" /></Campo>

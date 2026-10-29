@@ -70,6 +70,7 @@ try {
   comprobar('La placa repetida se rechaza desde Laravel', (await contexto.request.get(`${origen}/api/vehiculos`).then(r=>r.json())).vehiculos.length===catalogos.vehiculos.length);
   await foto(pagina,'02-error-placa-pc.png');
   await pagina.getByLabel('Placa',{exact:true}).fill(placa);
+  comprobar('Corregir la placa retira el error anterior', (await pagina.locator('.form-error').textContent()).trim()==='');
   await foto(pagina,'03-registrar-vehiculo-pc.png');
   await pagina.getByRole('button',{name:'Guardar vehículo',exact:true}).click();
   await pagina.getByText('Vehículo registrado correctamente.',{exact:true}).waitFor();
