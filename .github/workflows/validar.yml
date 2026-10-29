@@ -57,8 +57,8 @@ jobs:
     timeout-minutes: 12
     env:
       DEMO_E2E: 'true'
-      DEMO_DATA_PATH: ${{ runner.temp }}/floatmate-navegador
-      FLOATMATE_CAPTURAS: ${{ github.workspace }}/evidencia-avance-2
+      DEMO_DATA_PATH: /tmp/floatmate-navegador
+      FLOATMATE_CAPTURAS: ../evidencia-avance-2
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -103,3 +103,4 @@ jobs:
           name: evidencia-avance-2
           path: evidencia-avance-2/
           if-no-files-found: ignore
+
