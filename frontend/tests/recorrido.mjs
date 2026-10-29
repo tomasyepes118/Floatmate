@@ -9,7 +9,7 @@ await mkdir(capturas, { recursive: true });
 const navegador = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHANNEL ? { channel: process.env.PLAYWRIGHT_CHANNEL } : {}) });
 const resultados = [], errores = [];
 const comprobar = (nombre, valor) => { assert.ok(valor, nombre); resultados.push(nombre); };
-const foto = (pagina, nombre) => pagina.screenshot({ path: resolve(capturas, nombre), fullPage: false });
+const foto = (pagina, nombre) => /error|registrar|programar|registro|programacion/.test(nombre) ? pagina.getByRole('dialog').screenshot({ path: resolve(capturas, nombre) }) : pagina.screenshot({ path: resolve(capturas, nombre), fullPage: false });
 
 async function ingresar(pagina) {
   await pagina.getByLabel('Usuario', { exact: true }).fill('admin');
@@ -26,7 +26,7 @@ async function enviar(contexto, ruta, datos) {
 }
 
 try {
-  const contexto = await navegador.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
+  const contexto = await navegador.newContext({ viewport: { width: 1440, height: 850 }, deviceScaleFactor: 1 });
   const pagina = await contexto.newPage();
   pagina.on('pageerror', error => errores.push(error.message));
   for (const ruta of ['resumen','vehiculos','viajes']) {
