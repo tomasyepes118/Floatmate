@@ -3,8 +3,11 @@
 import { useState } from 'react';
 import { enviarAccion } from '../lib/api';
 import Marca from './Marca';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export default function BarraLateral({ usuario }) {
+  const ruta = usePathname();
   const [saliendo, setSaliendo] = useState(false);
   const [error, setError] = useState('');
 
@@ -25,9 +28,7 @@ export default function BarraLateral({ usuario }) {
     <Marca />
     <p className="nav-label">OPERACIÓN</p>
     <nav aria-label="Navegación principal">
-      <a href="/resumen" className="active" aria-current="page">Resumen</a>
-      <button type="button" disabled title="Disponible en una próxima entrega">Vehículos</button>
-      <button type="button" disabled title="Disponible en una próxima entrega">Viajes</button>
+      {[['/resumen','Resumen'],['/vehiculos','Vehículos'],['/viajes','Viajes']].map(([href,texto]) => <Link href={href} key={href} prefetch={false} className={ruta===href ? 'active' : ''} aria-current={ruta===href ? 'page' : undefined}>{texto}</Link>)}
     </nav>
     <div className="sidebar-bottom">
       <span className="avatar" aria-hidden="true">TY</span>

@@ -19,6 +19,7 @@ Thumbs.db
 **/storage/framework/sessions/*
 **/storage/framework/cache/data/*
 **/storage/framework/views/*
+**/storage/app/demo/*
 **/storage/logs/*
 **/.phpunit.cache/
 **/test-results/

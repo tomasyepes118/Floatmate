@@ -4,29 +4,33 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use App\Services\RepositorioDemo;
+use Illuminate\Support\Carbon;
 
 class ResumenController extends Controller
 {
-    public function __invoke(Request $request): JsonResponse
+    public function __invoke(Request $request, RepositorioDemo $repositorio): JsonResponse
     {
-        // Valores de la referencia visual. No son consultas ni registros de una base de datos.
+        $datos = $repositorio->leer();
+        $vehiculos = collect($datos['vehiculos']);
+        $programados = collect($datos['viajes'])->where('estado', 'PROGRAMADO');
+        $proximos = $programados->sortBy('salida')->take(4)->map(function (array $viaje) use ($datos): array {
+            $ruta = collect($datos['rutas'])->firstWhere('id', $viaje['ruta_id']);
+            $vehiculo = collect($datos['vehiculos'])->firstWhere('id', $viaje['vehiculo_id']);
+            $conductor = collect($datos['conductores'])->firstWhere('id', $viaje['conductor_id']);
+            $fecha = Carbon::createFromFormat('!Y-m-d\TH:i', $viaje['salida'], 'America/Bogota')->locale('es');
+            return ['id'=>$viaje['id'], 'ruta'=>$ruta['origen'].' - '.$ruta['destino'], 'conductor'=>$conductor['nombre'], 'placa'=>$vehiculo['placa'], 'salida'=>$fecha->translatedFormat('j \d\e M, H:i'), 'estado'=>'Programado'];
+        })->values()->all();
         return response()->json([
             'usuario' => $request->session()->get('usuario_demo'),
             'indicadores' => [
-                ['nombre' => 'Vehículos registrados', 'valor' => 5, 'descripcion' => 'Inventario de la flota'],
-                ['nombre' => 'Disponibles', 'valor' => 3, 'descripcion' => 'Listos para asignar'],
-                ['nombre' => 'Viajes programados', 'valor' => 2, 'descripcion' => 'Programación registrada'],
-                ['nombre' => 'En mantenimiento', 'valor' => 1, 'descripcion' => 'Fuera de operación'],
+                ['nombre' => 'Vehículos registrados', 'valor' => $vehiculos->count(), 'descripcion' => 'Inventario de la flota'],
+                ['nombre' => 'Disponibles', 'valor' => $vehiculos->where('estado','DISPONIBLE')->count(), 'descripcion' => 'Listos para asignar'],
+                ['nombre' => 'Viajes programados', 'valor' => $programados->count(), 'descripcion' => 'Programación registrada'],
+                ['nombre' => 'En mantenimiento', 'valor' => $vehiculos->where('estado','MANTENIMIENTO')->count(), 'descripcion' => 'Fuera de operación'],
             ],
-            'viajes' => [
-                ['id' => 1, 'ruta' => 'Medellín - Rionegro', 'conductor' => 'Carlos Restrepo', 'salida' => '5 de oct, 07:30', 'placa' => 'TPQ482', 'estado' => 'Programado'],
-                ['id' => 2, 'ruta' => 'Medellín - Guatapé', 'conductor' => 'Andrés Ruiz', 'salida' => '6 de oct, 08:00', 'placa' => 'JRC728', 'estado' => 'Programado'],
-            ],
-            'estados' => [
-                ['nombre' => 'Disponible', 'cantidad' => 3],
-                ['nombre' => 'En viaje', 'cantidad' => 1],
-                ['nombre' => 'Mantenimiento', 'cantidad' => 1],
-            ],
+            'viajes' => $proximos,
+            'estados' => collect(['DISPONIBLE'=>'Disponible','EN_RUTA'=>'En viaje','MANTENIMIENTO'=>'Mantenimiento','FUERA_SERVICIO'=>'Fuera de servicio'])->map(fn ($nombre,$estado) => ['nombre'=>$nombre,'cantidad'=>$vehiculos->where('estado',$estado)->count()])->values()->all(),
         ]);
     }
 }

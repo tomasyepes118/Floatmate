@@ -1,53 +1,58 @@
-# Comprobación de la entrega
+# Comprobaciones del segundo avance
 
-Fecha: 27 de octubre de 2026. Entorno de comprobación: Windows, Node.js 24.22.1, PHP 8.4.27.
+Fecha: 29 de octubre de 2026.
 
-## Resultado
+## Resultados
 
-- Compilación de producción de Next.js: correcta.
-- PHPUnit: **8 pruebas y 30 comprobaciones correctas**.
-- Recorrido real en navegador Edge con Playwright: **15 comprobaciones correctas**.
-- Revisión visual de login y resumen en PC y móvil: realizada.
+- Laravel: **26 pruebas y 123 comprobaciones correctas**.
+- Next.js: **compilación de producción correcta**.
+- Navegador Chromium: **31 comprobaciones correctas**.
+- GitHub Actions: los tres trabajos de compilación, servidor y navegador finalizaron correctamente.
 
-## Comprobaciones del navegador
+## Recorrido comprobado
 
-1. Abrir el resumen sin sesión devuelve al acceso.
-2. Ver muestra la contraseña.
-3. Ocultar vuelve a protegerla.
-4. Credenciales incorrectas muestran un mensaje en español.
-5. El acceso correcto llega al resumen a través de Laravel.
-6. Los indicadores muestran 5, 3, 2 y 1, como la referencia.
-7. La tabla contiene los dos viajes de demostración.
-8. Vehículos y Viajes están deshabilitados.
-9. Recargar conserva la sesión.
-10. Un POST sin token CSRF es rechazado por el servidor real.
-11. La cookie de sesión tiene HttpOnly.
-12. Salir invalida el acceso al resumen.
-13. El login móvil no desborda horizontalmente.
-14. El resumen móvil no desborda horizontalmente.
-15. El recorrido no produce errores JavaScript.
+1. resumen exige una sesión.
+2. vehiculos exige una sesión.
+3. viajes exige una sesión.
+4. El login rechaza una contraseña incorrecta.
+5. Login y resumen funcionan.
+6. La consulta muestra los vehículos guardados.
+7. El filtro de estado de vehículos funciona.
+8. La búsqueda vacía tiene un mensaje claro.
+9. Cerrar el formulario no crea registros.
+10. La placa repetida se rechaza desde Laravel.
+11. Corregir la placa retira el error anterior.
+12. Se registra el vehículo y aparece en la tabla.
+13. El registro se conserva al recargar.
+14. El resumen refleja el vehículo nuevo.
+15. La consulta muestra los viajes guardados.
+16. El filtro de estado de viajes funciona.
+17. La búsqueda sin viajes muestra un mensaje.
+18. El formulario solo ofrece buses disponibles.
+19. La fecha pasada se rechaza con un mensaje.
+20. El servidor rechaza el exceso de capacidad.
+21. El viaje creado aparece en la programación.
+22. El servidor rechaza cruces del vehículo.
+23. Las altas exigen protección CSRF.
+24. El panel refleja el viaje nuevo.
+25. Salir protege nuevamente la programación.
+26. El archivo conserva los registros después de salir.
+27. Vehículos se adapta al ancho móvil.
+28. El formulario de vehículo cabe en móvil.
+29. Viajes se adapta al ancho móvil.
+30. El formulario de viaje cabe en móvil.
+31. El recorrido no genera errores JavaScript.
 
-## Evidencia
+## Capturas
 
-- `capturas/01-login-pc.png`
-- `capturas/02-resumen-pc.png`
-- `capturas/03-login-movil.png`
-- `capturas/04-resumen-movil.png`
-
-Las capturas de PC usan escala de 125 % para facilitar la comparación con las imágenes del PDF.
-El recorrido en móvil usa 390 píxeles de ancho. Las capturas incluyen toda la página.
+Las diez capturas del segundo avance están en `capturas/`. Incluyen consultas, formularios, un error de placa repetida, el resumen actualizado y las vistas móviles. Los formularios largos permiten desplazarse dentro de la ventana.
 
 ## Alcance de las pruebas
 
-Esta revisión corresponde al login y la vista principal con datos de ejemplo. No prueba módulos posteriores,
-integración con bases de datos, publicación en internet, carga masiva ni un sistema multiusuario completo.
-Las pruebas del servidor no crean tablas ni requieren una base de datos.
+Las pruebas de Laravel usan carpetas temporales independientes. El navegador se ejecutó en GitHub Actions con `DEMO_E2E=true` y un archivo JSON separado. No se usaron ni modificaron registros de operación del equipo.
 
-Para repetir el recorrido con Edge instalado en Windows, desde `frontend`, con las aplicaciones iniciadas:
+Las comprobaciones cubren el acceso y los módulos de vehículos y viajes de esta etapa. No equivalen a pruebas de carga, operación empresarial, integración con PostgreSQL ni módulos todavía pendientes.
 
-```powershell
-$env:PLAYWRIGHT_CHANNEL = 'msedge'
-npm run test:e2e
-```
+## Ejecución de referencia
 
-También se puede instalar Chromium siguiendo `DOCUMENTACION.md`, sin establecer esa variable.
+https://github.com/tomasyepes118/Floatmate/actions/runs/40941457710
