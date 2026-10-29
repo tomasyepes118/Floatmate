@@ -55,9 +55,11 @@ class AccesoTest extends TestCase
         $this->postJson('/api/login', ['usuario' => 'admin', 'clave' => 'floatmate123'])->assertStatus(429);
     }
 
-    public function test_los_modulos_pendientes_no_tienen_endpoints(): void
+    public function test_los_modulos_de_operacion_requieren_sesion(): void
     {
-        $this->getJson('/api/vehiculos')->assertNotFound();
-        $this->getJson('/api/viajes')->assertNotFound();
+        $this->getJson('/api/vehiculos')->assertUnauthorized();
+        $this->getJson('/api/viajes')->assertUnauthorized();
+        $this->postJson('/api/vehiculos', [])->assertUnauthorized();
+        $this->postJson('/api/viajes', [])->assertUnauthorized();
     }
 }

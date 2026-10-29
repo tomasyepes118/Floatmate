@@ -13,4 +13,10 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(fn (Request $request, Throwable $exception) => $request->is('api/*'));
+        $exceptions->render(function (Illuminate\Validation\ValidationException $exception, Request $request) {
+            if ($request->is('api/*')) {
+                $errores = $exception->errors();
+                return response()->json(['message' => collect($errores)->flatten()->first(), 'errors' => $errores], 422);
+            }
+        });
     })->create();
