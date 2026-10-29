@@ -153,4 +153,15 @@ class OperacionesTest extends TestCase
         $this->getJson('/api/vehiculos')->assertStatus(500);
         $this->assertSame('contenido inválido',file_get_contents($archivo));
     }
+
+    public function test_los_registros_no_consumen_el_limite_de_intentos_del_login(): void
+    {
+        $this->acceso();
+        for ($intento=0; $intento<6; $intento++) {
+            $this->postJson('/api/vehiculos', $this->vehiculo(['placa'=>'TPQ482']))->assertUnprocessable();
+        }
+        $this->postJson('/api/logout')->assertOk();
+        $this->postJson('/api/login',['usuario'=>'admin','clave'=>'floatmate123'])->assertOk();
+        $this->getJson('/api/resumen')->assertOk();
+    }
 }
