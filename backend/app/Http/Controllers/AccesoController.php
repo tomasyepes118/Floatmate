@@ -13,7 +13,7 @@ class AccesoController extends Controller
     {
         $validador = Validator::make($request->all(), [
             'usuario' => ['required', 'string', 'max:60'],
-            'clave' => ['required', 'string', 'max:128'],
+            'clave' => ['required', 'string', 'max:72'],
         ]);
 
         if ($validador->fails()) {
@@ -21,15 +21,21 @@ class AccesoController extends Controller
         }
 
         $datos = $validador->validated();
-        $claveCorrecta = Hash::check($datos['clave'], config('demo.clave_hash'));
-        if (!hash_equals(config('demo.usuario'), trim($datos['usuario'])) || !$claveCorrecta) {
+        $usuario = trim($datos['usuario']);
+        $cuenta = hash_equals(config('demo.usuario'), $usuario)
+            ? ['hash'=>config('demo.clave_hash'), 'perfil'=>config('demo.perfil')]
+            : config('demo.cuentas')[$usuario] ?? null;
+        $hash = $cuenta['hash'] ?? null;
+        $claveCorrecta = strlen($datos['clave']) <= 72 && !str_contains($datos['clave'], "\0")
+            && Hash::check($datos['clave'], $hash ?: config('demo.clave_hash'));
+        if (!$hash || !$claveCorrecta) {
             return response()->json(['message' => 'Usuario o contraseña incorrectos. Intenta de nuevo.'], 422);
         }
 
         $request->session()->regenerate();
-        $request->session()->put('usuario_demo', config('demo.perfil'));
+        $request->session()->put('usuario_demo', $cuenta['perfil']);
 
-        return response()->json(['usuario' => config('demo.perfil')])->header('Cache-Control', 'no-store');
+        return response()->json(['usuario' => $cuenta['perfil']])->header('Cache-Control', 'no-store');
     }
 
     public function sesion(Request $request): JsonResponse

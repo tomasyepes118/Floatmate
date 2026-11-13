@@ -1,162 +1,75 @@
-# FloatMate
+# FloatMate · Cuarto avance
 
-Aplicación para gestionar flotas de buses. Esta primera versión incluye el **login y el resumen de la flota**, siguiendo los mockups del proyecto.
+Aplicación académica de gestión de flotas. Esta entrega reúne el ciclo de despacho, los catálogos de rutas y conductores y los registros de combustible, mantenimiento e incidentes.
 
-El acceso se valida en Laravel y la sesión se conserva en archivos locales. El panel presenta datos de demostración. **Esta versión no utiliza base de datos.**
+## Instalación en Windows
 
-![Resumen de FloatMate](docs/capturas/02-resumen-pc.png)
+Necesitas Node.js 22 o superior, PHP 8.4 y Composer 2. Prepara las dependencias una vez con internet. Abre esta carpeta en VS Code y usa dos terminales.
 
-## Estado actual
-
-- Acceso con usuario y contraseña, mensajes de error y opción de mostrar u ocultar la contraseña.
-- Sesión verificada en el servidor, resumen protegido y cierre de sesión.
-- Indicadores, próximos viajes y estado de los vehículos con datos de ejemplo.
-- Interfaz adaptada a computador y móvil.
-
-Vehículos y Viajes aparecen en el menú para conservar el diseño. Sus pantallas y formularios quedan para otra entrega; los controles están deshabilitados.
-
-## Tecnologías
-
-| Parte | Tecnologías |
-|---|---|
-| Interfaz | Next.js 16, React 19, JavaScript y JSX |
-| Servidor | Laravel 13 y PHP 8.4 |
-| Estilos | CSS y Bootstrap local |
-| Pruebas | PHPUnit y Playwright |
-
-Las versiones exactas están fijadas en `frontend/package-lock.json` y `backend/composer.lock`.
-
-## Estructura
-
-```text
-Floatmate/
-├── frontend/        Login, resumen, componentes y estilos de Next.js
-├── backend/         Acceso, sesión y API de Laravel
-├── docs/            Documentación, capturas y resultados de pruebas
-├── .github/         Comprobaciones automáticas del proyecto
-├── .gitignore       Exclusiones de dependencias y archivos locales
-└── README.md        Presentación y pasos para comenzar
-```
-
-## Requisitos
-
-- Node.js **22 o superior**, con npm.
-- PHP **8.4**, con las extensiones que requiere Laravel.
-- Composer **2**.
-
-Comprueba las herramientas desde una terminal de VS Code:
+En `backend`:
 
 ```powershell
-node --version
-npm --version
-php --version
-composer --version
-```
-
-Si alguna no se reconoce, instala la herramienta o revisa su configuración en `PATH` y abre una terminal nueva. La primera instalación de dependencias necesita internet.
-
-## Instalación inicial
-
-Clona este repositorio o descarga y descomprime su ZIP. En **VS Code → Archivo → Abrir carpeta**, abre la carpeta que contiene `frontend` y `backend`.
-
-En **Terminal → Nueva terminal**, desde la raíz del proyecto:
-
-```powershell
-cd backend
 composer install
 Copy-Item .env.example .env
 php artisan key:generate
 ```
 
-Abre una segunda terminal desde la raíz:
+En `frontend`:
 
 ```powershell
-cd frontend
 npm ci
 Copy-Item .env.example .env.local
-```
-
-Estos pasos se hacen al preparar una copia nueva. Conserva los archivos `.env` generados; no hace falta copiarlos ni cambiar la clave en cada inicio. No ejecutes migraciones ni crees una base de datos.
-
-> En macOS y Linux, usa `cp` en lugar de `Copy-Item`.
-
-## Cómo abrir FloatMate desde VS Code
-
-### 1. Iniciar Laravel
-
-Abre **Terminal → Nueva terminal**. Desde la raíz del proyecto, ejecuta:
-
-```powershell
-cd backend
-php artisan serve --host=127.0.0.1 --port=8000
-```
-
-Cuando aparezca `Server running on http://127.0.0.1:8000`, el servidor estará listo. **Deja esa terminal abierta.**
-
-### 2. Iniciar Next.js
-
-Pulsa el botón **+** del panel de terminales para abrir otra terminal. Desde la raíz, ejecuta:
-
-```powershell
-cd frontend
-npm run dev
-```
-
-Si esa terminal se abre dentro de `backend`, usa `cd ../frontend` en lugar de `cd frontend`.
-
-Cuando aparezca `http://127.0.0.1:3000`, la interfaz estará lista. **Deja también esa terminal abierta.**
-
-### 3. Abrir el navegador
-
-Mantén presionada **Ctrl** y haz clic en el enlace de Next.js, o abre [http://127.0.0.1:3000](http://127.0.0.1:3000).
-
-| Campo | Acceso de demostración |
-|---|---|
-| Usuario | `admin` |
-| Contraseña | `floatmate123` |
-
-El puerto **3000** muestra FloatMate; el **8000** atiende las solicitudes de Laravel. Usa siempre `127.0.0.1` para mantener la sesión en el mismo dominio. Este proyecto se inicia con esos dos servidores, no con Live Server.
-
-### 4. Detener la aplicación
-
-Presiona **Ctrl + C** en cada una de las dos terminales.
-
-## Comprobaciones
-
-Pruebas del servidor, desde `backend`:
-
-```powershell
-composer test
-```
-
-Compilación de la interfaz, desde `frontend`:
-
-```powershell
 npm run build
 ```
 
-Recorrido en navegador, con Laravel y Next.js iniciados, desde `frontend`:
+Si ya tienes configurados ambos archivos de entorno, consérvalos. Para arrancar, ejecuta `php artisan serve --host=127.0.0.1 --port=8000 --no-reload` en `backend` y `npm run start` en `frontend`. Abre [FloatMate local](http://127.0.0.1:3000) con el usuario `admin` y la contraseña de demostración `floatmate123`.
+
+Para desarrollar, usa `npm run dev`.
+
+## Mostrar FloatMate desde cero
+
+Desde `backend`, prepara un almacén vacío y arranca Laravel. Con Next.js abierto, entra a la aplicación y pulsa **Recorrido guiado**.
 
 ```powershell
-npx playwright install chromium
-npm run test:e2e
+$env:DEMO_DATA_PATH = (php artisan flota:preparar-demo --vacia).Trim()
+$env:FLOTA_STORAGE = 'json'
+php artisan serve --host=127.0.0.1 --port=8000 --no-reload
 ```
 
-GitHub Actions compila Next.js y ejecuta las pruebas de Laravel en cada push y pull request.
+Detén la instancia anterior de Laravel antes de usar el mismo puerto. La copia comienza sin vehículos, rutas, conductores, viajes ni registros. El recorrido enlaza cada pantalla y propone datos ficticios para crear el primer viaje.
 
-## Documentación
+## Preparar el pitch
 
-- [Guía completa del proyecto](docs/DOCUMENTACION.md): estructura, funcionamiento, configuración y solución de problemas.
-- [Resultados de las comprobaciones](docs/VALIDACION.md).
-- [Capturas de PC y móvil](docs/capturas).
-- `docs/Documentacion.html`: guía para abrir localmente en un navegador.
+En una terminal nueva, desde `backend`, prepara y arranca una copia aislada:
 
-## Próximos pasos
+```powershell
+$env:DEMO_DATA_PATH = (php artisan flota:preparar-demo).Trim()
+$env:FLOTA_STORAGE = 'json'
+php artisan serve --host=127.0.0.1 --port=8000 --no-reload
+```
 
-Desarrollar las pantallas de los módulos, sus formularios, el sistema de usuarios y permisos y la conexión a PostgreSQL. Esas funciones todavía no forman parte de esta versión.
+Detén primero cualquier instancia de Laravel que use el puerto 8000. Deja Next.js abierto. Cada vez que ejecutes la preparación obtendrás datos nuevos para repetir el ensayo.
 
-## Equipo
+1. En **Viajes**, registra un ticket nuevo para **V-9002** con un resultado simulado de `0.015` mg/L. Muestra el control rechazado.
+2. En **V-9001**, registra otro ticket con `0` mg/L. Inicia el viaje y muestra el estado **En curso**.
+3. Finaliza V-9001 con **35.000 km** de llegada. En **Vehículos**, busca **TPQ482** y muestra el estado **Mantenimiento**.
+4. En **Registros → Mantenimientos**, registra el servicio de TPQ482 a **35.000 km** y su próximo mantenimiento a **40.000 km**. El bus vuelve a **Disponible**.
 
-Tomás Yepes · Cristian Benites · Mateo Gallo.
+Para mostrar la revisión antes del despacho, abre **Programar viaje** en una copia nueva del pitch. Elige Medellín–Rionegro, KPT641, Daniel López, 20 pasajeros y una salida futura que no cruce la programación. Pulsa **Revisar elegibilidad**. KPT641 tiene 20 km disponibles antes del mantenimiento y el recorrido requiere 42 km. El resultado ofrece otros buses que cumplen las condiciones. Puedes elegir TPQ482 si el horario está libre y volver a revisar. Cierra el formulario sin guardar si vas a continuar con los viajes de ensayo V-9001 y V-9002.
 
-Proyecto académico en desarrollo. Las credenciales son públicas y sirven para probar la demostración. Las dependencias conservan sus licencias; FloatMate no concede una licencia general de código abierto.
+## Material del pitch
+
+- [Presentación editable en PowerPoint](docs/pitch/FloatMate-Pitch.pptx)
+- [Guion, pasos de la demostración y preguntas del jurado](docs/pitch/Guion-Pitch-FloatMate.md)
+- [Resultados de las pruebas](docs/VALIDACION.md)
+
+## Datos, cuentas y pruebas
+
+- Al programar, **Revisar elegibilidad** explica problemas de capacidad, disponibilidad, licencia, horario y kilometraje. Si hay un bus compatible con la ruta y el conductor seleccionados, puedes elegirlo desde el resultado. La revisión no reserva recursos y Laravel vuelve a comprobar las reglas al confirmar.
+
+- El modo local guarda los datos en `backend/storage/app/demo/flota.json`. Puede abrir datos del tercer avance y agrega las nuevas colecciones al leerlos.
+- PostgreSQL es una opción de persistencia. Usa un documento JSONB protegido por una transacción y bloqueo de fila. Consulta [configuración, roles y pruebas](docs/OPERACION.md).
+- Las cuentas opcionales de Operador y Consulta se habilitan con hashes propios. El administrador gestiona catálogos y vehículos. El operador despacha y registra actividad. Consulta accede al resumen y a exportaciones.
+- Los incidentes de esta entrega conservan detalle y gravedad. El alojamiento de evidencias, el cálculo de consumo por distancia y la integración con servicios externos quedan fuera del alcance implementado.
+
+**Equipo** · Tomás Yepes, Cristian Benites y Mateo Gallo.

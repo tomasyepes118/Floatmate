@@ -10,6 +10,7 @@ export async function consultarServidor(ruta) {
       signal: AbortSignal.timeout(5000),
     });
     if (respuesta.status === 401) return { estado: 'sin-sesion' };
+    if (respuesta.status === 403) return { estado: 'sin-permiso' };
     if (!respuesta.ok) return { estado: 'no-disponible' };
     return { estado: 'correcto', datos: await respuesta.json() };
   } catch {

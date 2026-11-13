@@ -1,11 +1,12 @@
 export class ErrorApi extends Error {
-  constructor(mensaje, estado) {
+  constructor(mensaje, estado, errores = {}) {
     super(mensaje);
     this.estado = estado;
+    this.errores = errores;
   }
 }
 
-export async function enviarAccion(ruta, datos = {}) {
+export async function enviarAccion(ruta, datos = {}, metodo = 'POST') {
   let csrf;
   try {
     const respuesta = await fetch('/api/csrf', { cache: 'no-store', credentials: 'same-origin' });
@@ -18,7 +19,7 @@ export async function enviarAccion(ruta, datos = {}) {
   let respuesta;
   try {
     respuesta = await fetch(`/api/${ruta}`, {
-      method: 'POST',
+      method: metodo,
       credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
       body: JSON.stringify(datos),
@@ -29,12 +30,16 @@ export async function enviarAccion(ruta, datos = {}) {
 
   const contenido = await respuesta.json().catch(() => ({}));
   if (!respuesta.ok) {
+    if (respuesta.status===401) {
+      window.location.replace('/login');
+      throw new ErrorApi('La sesión terminó. Vuelve a ingresar.', 401);
+    }
     const mensaje = respuesta.status === 419
       ? 'La sesión venció. Intenta ingresar de nuevo.'
       : respuesta.status === 429
         ? 'Has realizado varios intentos. Espera un minuto y vuelve a intentar.'
         : contenido.message || 'No pudimos completar la solicitud. Intenta de nuevo.';
-    throw new ErrorApi(mensaje, respuesta.status);
+    throw new ErrorApi(mensaje, respuesta.status, contenido.errors || {});
   }
   return contenido;
 }

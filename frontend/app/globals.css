@@ -567,10 +567,72 @@ code {
 .service-error a + a { margin-left:12px; }
 .skip-link { position:fixed; top:-100px; left:16px; z-index:20; background:white; padding:12px; }
 .skip-link:focus { top:12px; }
+.toolbar { display:flex; gap:12px; margin-bottom:18px; align-items:center; }
+.toolbar .search { flex:1; min-width:0; }
+.toolbar .form-select { width:195px; }
+.toolbar .btn { white-space:nowrap; }
+.operation-dialog { color:var(--ink); border:1px solid var(--border); border-radius:10px; padding:26px; width:min(94vw,620px); max-height:90dvh; overflow:auto; box-shadow:0 12px 55px #0002; }
+.operation-dialog::backdrop { background:#1b1e234d; }
+.operation-dialog .panel-heading { margin-bottom:24px; }
+.operation-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 18px; }
+.form-field { margin-bottom:16px; min-width:0; }
+.form-field small { display:block; margin-top:6px; font-size:12px; }
+.field-error,.form-error { color:#aa2834; }
+.form-error { font-size:13px; margin:12px 0 16px; }
+.form-control[aria-invalid=true],.form-select[aria-invalid=true] { border-color:#aa2834; }
+.operation-success { padding:13px 16px; margin-bottom:18px; border:1px solid #cbded1; background:#f1f7f3; border-radius:6px; font-size:14px; color:#285a3f; }
+.empty-state { padding:24px 0; color:var(--muted); font-size:14px; }
+.route-detail { background:#f5f6f8; padding:10px 12px; font-size:12px; border-radius:5px; color:#52565c; margin-top:-6px; }
+.eligibility-result { margin-bottom:14px; font-size:14px; }
+.eligibility-result p:last-child { margin-bottom:0; }
+.operation-hint { font-size:12px; color:var(--muted); }
+.row-actions { display:flex; flex-wrap:wrap; gap:5px; align-items:center; }
+.row-actions .btn, .table td > .btn-sm { padding:4px 8px; font-size:12px; }
+.trip-status small { margin-top:4px; }
+@media(max-width:700px) {
+  .toolbar { flex-wrap:wrap; }
+  .toolbar .search { flex-basis:100%; }
+  .toolbar .form-select { flex:1; min-width:160px; width:auto; }
+  .toolbar .btn { flex:1; }
+  .operation-grid { grid-template-columns:1fr; }
+  .operation-dialog { padding:20px; max-height:92dvh; }
+  .operation-dialog .panel-heading { align-items:center; }
+  .operation-dialog input[type=datetime-local] { max-width:100%; min-width:0; }
+  .table td { overflow-wrap:anywhere; }
+  .row-actions { justify-content:flex-end; }
+}
 @media(max-width:700px) {
   .sidebar nav button { flex:1; text-align:center; width:auto; margin:0; }
   .sidebar-bottom .salir { width:auto; margin:0; }
   .panel-heading .text-action { font-size:12px; text-align:right; }
   .service-error a { margin:8px 0; }
   .login-layout { min-height:100svh; }
+}
+
+.module-nav { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+.module-nav button[aria-pressed=true] { background:#23262b; color:white; }
+.record-detail { white-space:pre-wrap; overflow-wrap:anywhere; max-width:40ch; }
+.activity-totals div { display:flex; justify-content:space-between; gap:12px; margin:8px 0; }
+.activity-totals dd { margin:0; text-align:right; }
+.activity-totals dt { font-weight:400; }
+.topbar-actions { display:flex; align-items:center; gap:14px; flex-wrap:wrap; justify-content:flex-end; }
+.topbar-actions a { font-weight:600; white-space:nowrap; text-decoration:underline; text-underline-offset:3px; }
+.tour-layout { display:grid; grid-template-columns:minmax(210px, 260px) minmax(0, 1fr); align-items:start; gap:20px; }
+.tour-index ol { margin:0; padding:0; list-style:none; }
+.tour-index button { display:block; width:100%; text-align:left; border:0; border-radius:6px; padding:9px 10px; background:transparent; color:var(--ink); }
+.tour-index button:hover { background:#f5f6f8; }
+.tour-index button[aria-current=step] { background:#edf1f4; font-weight:600; }
+.tour-index button span, .tour-progress { color:var(--muted); }
+.tour-step h2 { font-size:1.55rem; }
+.tour-step h3 { font-size:1rem; margin-top:22px; }
+.tour-step p { max-width:65ch; }
+.tour-progress { font-size:.875rem; }
+.tour-controls { display:flex; justify-content:space-between; gap:10px; margin-top:22px; }
+@media(max-width:760px) {
+  .tour-layout { grid-template-columns:1fr; }
+  .tour-step { grid-row:1; }
+}
+@media(max-width:700px) {
+  .sidebar nav { flex-wrap:wrap; }
+  .sidebar nav a { flex:1 0 28%; }
 }
