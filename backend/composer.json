@@ -1,7 +1,7 @@
 {
     "name": "floatmate/inicio",
     "type": "project",
-    "description": "Login y resumen de FloatMate sin base de datos.",
+    "description": "API operativa de FloatMate para gestión de flotas.",
     "license": "proprietary",
     "require": { "php": "^8.4", "laravel/framework": "^13.17" },
     "require-dev": { "phpunit/phpunit": "^12.5.12" },

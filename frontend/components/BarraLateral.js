@@ -10,6 +10,10 @@ export default function BarraLateral({ usuario }) {
   const ruta = usePathname();
   const [saliendo, setSaliendo] = useState(false);
   const [error, setError] = useState('');
+  const enlaces = [['/resumen','Resumen']];
+  if (usuario.rol !== 'Consulta') enlaces.push(['/vehiculos','Vehículos'], ['/viajes','Viajes']);
+  if (usuario.rol === 'Administrador') enlaces.push(['/catalogos','Catálogos']);
+  if (usuario.rol !== 'Consulta') enlaces.push(['/registros','Registros']);
 
   async function salir() {
     setSaliendo(true);
@@ -28,10 +32,10 @@ export default function BarraLateral({ usuario }) {
     <Marca />
     <p className="nav-label">OPERACIÓN</p>
     <nav aria-label="Navegación principal">
-      {[['/resumen','Resumen'],['/vehiculos','Vehículos'],['/viajes','Viajes']].map(([href,texto]) => <Link href={href} key={href} prefetch={false} className={ruta===href ? 'active' : ''} aria-current={ruta===href ? 'page' : undefined}>{texto}</Link>)}
+      {enlaces.map(([href,texto]) => <Link href={href} key={href} prefetch={false} className={ruta===href ? 'active' : ''} aria-current={ruta===href ? 'page' : undefined}>{texto}</Link>)}
     </nav>
     <div className="sidebar-bottom">
-      <span className="avatar" aria-hidden="true">TY</span>
+      <span className="avatar" aria-hidden="true">{usuario.nombre.split(/\s+/).slice(0, 2).map(palabra => palabra[0]).join('').toUpperCase()}</span>
       <div>{usuario.nombre}<small>{usuario.rol}</small></div>
       <button className="salir" type="button" onClick={salir} disabled={saliendo}>{saliendo ? 'Saliendo…' : 'Salir'}</button>
       {error && <p className="text-danger" role="alert">{error}</p>}

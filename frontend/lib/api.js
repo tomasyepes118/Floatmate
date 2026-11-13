@@ -6,7 +6,7 @@ export class ErrorApi extends Error {
   }
 }
 
-export async function enviarAccion(ruta, datos = {}) {
+export async function enviarAccion(ruta, datos = {}, metodo = 'POST') {
   let csrf;
   try {
     const respuesta = await fetch('/api/csrf', { cache: 'no-store', credentials: 'same-origin' });
@@ -19,7 +19,7 @@ export async function enviarAccion(ruta, datos = {}) {
   let respuesta;
   try {
     respuesta = await fetch(`/api/${ruta}`, {
-      method: 'POST',
+      method: metodo,
       credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
       body: JSON.stringify(datos),

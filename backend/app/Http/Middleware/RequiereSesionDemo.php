@@ -14,6 +14,8 @@ class RequiereSesionDemo
             return response()->json(['message' => 'Ingresa para consultar tu flota.'], 401)->header('Cache-Control', 'no-store');
         }
 
-        return $next($request)->header('Cache-Control', 'no-store, private');
+        $respuesta = $next($request);
+        $respuesta->headers->set('Cache-Control', 'no-store, private');
+        return $respuesta;
     }
 }

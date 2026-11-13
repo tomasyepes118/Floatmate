@@ -35,7 +35,7 @@ export default function FormularioAcceso({ servicioDisponible }) {
           <input className="form-control mb-3" id="usuario" name="usuario" required maxLength={60} autoComplete="username" placeholder="Tu usuario" disabled={enviando} />
           <label htmlFor="clave" className="form-label">Contraseña</label>
           <div className="input-group mb-4">
-            <input className="form-control" id="clave" name="clave" type={visible ? 'text' : 'password'} required maxLength={128} autoComplete="current-password" placeholder="Tu contraseña" disabled={enviando} />
+            <input className="form-control" id="clave" name="clave" type={visible ? 'text' : 'password'} required maxLength={72} autoComplete="current-password" placeholder="Tu contraseña" disabled={enviando} />
             <button className="btn btn-outline-secondary" type="button" onClick={() => setVisible(!visible)} aria-label={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-pressed={visible} disabled={enviando}>{visible ? 'Ocultar' : 'Ver'}</button>
           </div>
           <p className="text-danger login-error" role="alert">{error}</p>

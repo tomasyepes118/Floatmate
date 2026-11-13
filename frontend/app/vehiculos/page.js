@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 export default async function PaginaVehiculos() {
   const respuesta = await consultarServidor('vehiculos');
   if (respuesta.estado==='sin-sesion') redirect('/login');
+  if (respuesta.estado==='sin-permiso') redirect('/resumen');
   if (respuesta.estado!=='correcto') return <ServicioNoDisponible ruta="/vehiculos" />;
-  return <MarcoAplicacion usuario={respuesta.datos.usuario}><Vehiculos iniciales={respuesta.datos.vehiculos} /></MarcoAplicacion>;
+  return <MarcoAplicacion usuario={respuesta.datos.usuario}><Vehiculos iniciales={respuesta.datos.vehiculos} puedeEditar={respuesta.datos.usuario.rol === 'Administrador'} /></MarcoAplicacion>;
 }

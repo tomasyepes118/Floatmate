@@ -30,6 +30,12 @@ class ResumenController extends Controller
                 ['nombre' => 'En mantenimiento', 'valor' => $vehiculos->where('estado','MANTENIMIENTO')->count(), 'descripcion' => 'Fuera de operación'],
             ],
             'viajes' => $proximos,
+            'actividad' => [
+                'litros'=>round(array_sum(array_column($datos['combustible'], 'litros')), 2),
+                'costo'=>round(array_sum(array_column($datos['combustible'], 'total')), 2),
+                'mantenimientos'=>count($datos['mantenimientos']),
+                'incidentes'=>count($datos['incidentes']),
+            ],
             'estados' => collect(['DISPONIBLE'=>'Disponible','EN_RUTA'=>'En viaje','MANTENIMIENTO'=>'Mantenimiento','FUERA_SERVICIO'=>'Fuera de servicio'])->map(fn ($nombre,$estado) => ['nombre'=>$nombre,'cantidad'=>$vehiculos->where('estado',$estado)->count()])->values()->all(),
         ]);
     }

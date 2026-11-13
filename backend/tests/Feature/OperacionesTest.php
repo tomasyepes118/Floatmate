@@ -30,6 +30,93 @@ class OperacionesTest extends TestCase
         $this->getJson('/api/viajes')->assertOk()->assertJsonCount(4, 'viajes')->assertJsonCount(4, 'rutas')->assertJsonCount(4, 'conductores');
     }
 
+    public function test_editar_y_retirar_vehiculo_conserva_su_identidad_y_detecta_cambios_concurrentes(): void
+    {
+        $this->acceso();
+        $edicion = $this->vehiculo([
+            'placa'=>'KPT641', 'codigo'=>'BUS-NOR-005', 'kilometraje'=>31700,
+            'proximo_mantenimiento'=>36000, 'estado'=>'FUERA_SERVICIO', 'revision'=>0,
+        ]);
+        $this->putJson('/api/vehiculos/5', array_replace($edicion, ['placa'=>'TPQ482']))
+            ->assertUnprocessable()->assertJsonValidationErrors('placa');
+        $this->putJson('/api/vehiculos/5', $edicion)->assertOk()
+            ->assertJsonPath('vehiculo.id', 5)->assertJsonPath('vehiculo.revision', 1);
+        $this->putJson('/api/vehiculos/5', $edicion)->assertConflict();
+        $this->postJson('/api/viajes', $this->viaje())->assertUnprocessable()->assertJsonValidationErrors('vehiculo_id');
+        $this->getJson('/api/resumen')->assertJsonPath('indicadores.0.valor', 5)->assertJsonPath('indicadores.1.valor', 2);
+        $this->getJson('/api/viajes')->assertJsonPath('viajes.3.vehiculo_id', 5);
+    }
+
+    public function test_editar_vehiculo_protege_las_asignaciones_vigentes(): void
+    {
+        $this->acceso();
+        $vehiculo = $this->vehiculo([
+            'placa'=>'TPQ482', 'codigo'=>'BUS-NOR-001', 'kilometraje'=>28450,
+            'proximo_mantenimiento'=>35000, 'revision'=>0,
+        ]);
+        foreach (['estado'=>'FUERA_SERVICIO', 'capacidad'=>19, 'kilometraje'=>28449, 'proximo_mantenimiento'=>28480] as $campo=>$valor) {
+            $this->putJson('/api/vehiculos/1', array_replace($vehiculo, [$campo=>$valor]))
+                ->assertUnprocessable()->assertJsonValidationErrors($campo);
+        }
+        $this->putJson('/api/vehiculos/2', array_replace($vehiculo, [
+            'placa'=>'SXY916', 'codigo'=>'BUS-NOR-002', 'kilometraje'=>61400, 'proximo_mantenimiento'=>65000,
+        ]))->assertUnprocessable()->assertJsonValidationErrors('estado');
+        $this->putJson('/api/vehiculos/1', array_replace($vehiculo, ['marca'=>'Chevrolet NPR actualizado']))
+            ->assertOk()->assertJsonPath('vehiculo.marca', 'Chevrolet NPR actualizado');
+    }
+
+    public function test_inicio_y_llegada_actualizan_vehiculo_conductor_y_resumen(): void
+    {
+        $this->acceso();
+        $this->patchJson('/api/viajes/9001/estado', ['estado'=>'EN_CURSO'])
+            ->assertUnprocessable()->assertJsonValidationErrors('estado');
+        $this->postJson('/api/viajes/9001/control', ['numero_ticket'=>'sal-01', 'alcoholemia_mg_l'=>'0.000'])
+            ->assertCreated()->assertJsonPath('viaje.control_salida.resultado', 'APROBADO');
+        $this->patchJson('/api/viajes/9001/estado', ['estado'=>'EN_CURSO'])
+            ->assertOk()->assertJsonPath('viaje.estado', 'EN_CURSO')->assertJsonStructure(['viaje'=>['salida_real']]);
+        $this->getJson('/api/viajes')->assertJsonPath('vehiculos.0.estado', 'EN_RUTA')
+            ->assertJsonPath('conductores.0.estado', 'EN_VIAJE');
+        $this->getJson('/api/resumen')->assertJsonPath('indicadores.2.valor', 1);
+        $this->patchJson('/api/viajes/9001/estado', ['estado'=>'CANCELADO'])
+            ->assertUnprocessable()->assertJsonValidationErrors('estado');
+        $this->patchJson('/api/viajes/9001/estado', ['estado'=>'FINALIZADO', 'kilometraje_llegada'=>28449])
+            ->assertUnprocessable()->assertJsonValidationErrors('kilometraje_llegada');
+        $this->patchJson('/api/viajes/9001/estado', ['estado'=>'FINALIZADO', 'kilometraje_llegada'=>35001])
+            ->assertOk()->assertJsonPath('viaje.estado', 'FINALIZADO')->assertJsonStructure(['viaje'=>['salida_real', 'llegada_real']]);
+        $this->getJson('/api/viajes')->assertJsonPath('vehiculos.0.estado', 'MANTENIMIENTO')
+            ->assertJsonPath('vehiculos.0.kilometraje', 35001)->assertJsonPath('conductores.0.estado', 'DISPONIBLE');
+        $this->patchJson('/api/viajes/9001/estado', ['estado'=>'FINALIZADO', 'kilometraje_llegada'=>35002])
+            ->assertUnprocessable()->assertJsonValidationErrors('estado');
+    }
+
+    public function test_control_rechazado_se_conserva_y_cancelar_libera_el_horario(): void
+    {
+        $this->acceso();
+        $this->postJson('/api/viajes/9001/control', ['numero_ticket'=>'SAL-02', 'alcoholemia_mg_l'=>'0.0001'])
+            ->assertUnprocessable()->assertJsonValidationErrors('alcoholemia_mg_l');
+        $this->postJson('/api/viajes/9001/control', ['numero_ticket'=>'SAL-02', 'alcoholemia_mg_l'=>'0.015'])
+            ->assertCreated()->assertJsonPath('viaje.control_salida.resultado', 'RECHAZADO');
+        $this->postJson('/api/viajes/9001/control', ['numero_ticket'=>'SAL-03', 'alcoholemia_mg_l'=>0])
+            ->assertUnprocessable()->assertJsonValidationErrors('estado');
+        $this->postJson('/api/viajes/9002/control', ['numero_ticket'=>'sal-02', 'alcoholemia_mg_l'=>0])
+            ->assertUnprocessable()->assertJsonValidationErrors('numero_ticket');
+        $this->patchJson('/api/viajes/9001/estado', ['estado'=>'EN_CURSO'])
+            ->assertUnprocessable()->assertJsonValidationErrors('estado');
+        $anterior = $this->getJson('/api/viajes')->json('viajes.0');
+        $this->patchJson('/api/viajes/9001/estado', ['estado'=>'CANCELADO'])->assertOk()
+            ->assertJsonPath('viaje.estado', 'CANCELADO')->assertJsonPath('viaje.control_salida.resultado', 'RECHAZADO');
+        $this->postJson('/api/viajes', $anterior)->assertCreated()->assertJsonPath('viaje.estado', 'PROGRAMADO');
+    }
+
+    public function test_viaje_en_curso_del_segundo_avance_se_puede_finalizar(): void
+    {
+        $this->acceso();
+        $this->patchJson('/api/viajes/9003/estado', ['estado'=>'FINALIZADO', 'kilometraje_llegada'=>61415])
+            ->assertOk()->assertJsonPath('viaje.estado', 'FINALIZADO')->assertJsonStructure(['viaje'=>['llegada_real']]);
+        $this->getJson('/api/viajes')->assertJsonPath('vehiculos.1.estado', 'DISPONIBLE')
+            ->assertJsonPath('conductores.1.estado', 'DISPONIBLE');
+    }
+
     public function test_registrar_vehiculo_normaliza_y_actualiza_el_resumen(): void
     {
         $this->acceso();
@@ -77,6 +164,30 @@ class OperacionesTest extends TestCase
     {
         $this->acceso();
         $this->postJson('/api/viajes', $this->viaje(['vehiculo_id'=>1,'pasajeros'=>33]))->assertUnprocessable()->assertJsonValidationErrors('pasajeros');
+    }
+
+    public function test_la_revision_explica_el_limite_y_sugiere_un_bus_sin_reservarlo(): void
+    {
+        $this->acceso();
+        app(RepositorioDemo::class)->modificar(function (array &$datos): void {
+            $datos['vehiculos'][0]['kilometraje'] = 34958;
+            $datos['vehiculos'][4]['kilometraje'] = 34980;
+            $datos['vehiculos'][4]['proximo_mantenimiento'] = 35000;
+        });
+        $viaje = $this->viaje();
+        $this->postJson('/api/viajes/elegibilidad', $viaje)->assertOk()
+            ->assertJsonPath('problemas.0.campo', 'vehiculo_id')
+            ->assertJsonPath('kilometraje.disponible', 20)
+            ->assertJsonPath('kilometraje.llegada', 35022)
+            ->assertJsonFragment(['placa'=>'TPQ482']);
+        $this->getJson('/api/viajes')->assertJsonCount(4, 'viajes');
+        $this->postJson('/api/viajes', $viaje)->assertUnprocessable()->assertJsonValidationErrors('vehiculo_id');
+        $alternativa = array_replace($viaje, ['vehiculo_id'=>1]);
+        $this->postJson('/api/viajes/elegibilidad', $alternativa)->assertOk()
+            ->assertJsonCount(0, 'problemas')->assertJsonPath('kilometraje.llegada', 35000);
+        $this->postJson('/api/viajes', $alternativa)->assertCreated();
+        $this->postJson('/api/viajes/elegibilidad', $alternativa)->assertOk()
+            ->assertJsonCount(2, 'problemas')->assertJsonCount(0, 'alternativas');
     }
 
     public function test_fecha_pasada_o_invalida_se_rechaza(): void

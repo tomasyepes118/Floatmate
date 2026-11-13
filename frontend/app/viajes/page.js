@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 export default async function PaginaViajes() {
   const respuesta = await consultarServidor('viajes');
   if (respuesta.estado==='sin-sesion') redirect('/login');
+  if (respuesta.estado==='sin-permiso') redirect('/resumen');
   if (respuesta.estado!=='correcto') return <ServicioNoDisponible ruta="/viajes" />;
   return <MarcoAplicacion usuario={respuesta.datos.usuario}><Viajes iniciales={respuesta.datos} /></MarcoAplicacion>;
 }

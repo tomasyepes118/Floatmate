@@ -52,13 +52,13 @@ jobs:
       - run: composer test
 
   navegador:
-    name: Recorrer el segundo avance
+    name: Recorrer el cuarto avance
     runs-on: ubuntu-latest
     timeout-minutes: 12
     env:
       DEMO_E2E: 'true'
       DEMO_DATA_PATH: /tmp/floatmate-navegador
-      FLOATMATE_CAPTURAS: ../evidencia-avance-2
+      FLOATMATE_CAPTURAS: ../evidencia-avance-4
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -86,7 +86,7 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Iniciar los servidores de prueba
         run: |
-          (cd backend && php artisan serve --host=127.0.0.1 --port=8000 > "$RUNNER_TEMP/laravel.log" 2>&1) &
+          (cd backend && php artisan serve --host=127.0.0.1 --port=8000 --no-reload > "$RUNNER_TEMP/laravel.log" 2>&1) &
           (cd frontend && npm run start > "$RUNNER_TEMP/next.log" 2>&1) &
           for intento in $(seq 1 40); do
             if curl -fsS http://127.0.0.1:8000/up >/dev/null && curl -fsS http://127.0.0.1:3000/login >/dev/null; then exit 0; fi
@@ -94,12 +94,12 @@ jobs:
           done
           cat "$RUNNER_TEMP/laravel.log" "$RUNNER_TEMP/next.log"
           exit 1
-      - name: Verificar consultas y registros
+      - name: Verificar consultas, registros y ciclo de viaje
         working-directory: frontend
         run: npm run test:e2e
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: evidencia-avance-2
-          path: evidencia-avance-2/
+          name: evidencia-avance-4
+          path: evidencia-avance-4/
           if-no-files-found: ignore

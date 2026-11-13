@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Closure;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use RuntimeException;
 
@@ -17,6 +18,12 @@ class RepositorioDemo
 
     public function modificar(Closure $operacion): mixed
     {
+        if (config('demo.almacen') === 'pgsql') {
+            return $this->modificarPostgres($operacion);
+        }
+        if (config('demo.almacen') !== 'json') {
+            throw new RuntimeException('FLOTA_STORAGE debe ser json o pgsql.');
+        }
         $directorio = config('demo.directorio');
         File::ensureDirectoryExists($directorio);
         $bloqueo = fopen($directorio.'/flota.lock', 'c');
@@ -28,10 +35,8 @@ class RepositorioDemo
             $archivo = $directorio.'/flota.json';
             $existia = is_file($archivo);
             $datos = $existia ? json_decode(File::get($archivo), true, 512, JSON_THROW_ON_ERROR) : $this->iniciales();
-            if (!isset($datos['vehiculos'], $datos['viajes'], $datos['rutas'], $datos['conductores'])) {
-                throw new RuntimeException('El archivo de demostración no tiene la estructura esperada.');
-            }
             $antes = $datos;
+            $datos = $this->completar($datos);
             $resultado = $operacion($datos);
             if (!$existia || $antes !== $datos) {
                 File::replace($archivo, json_encode($datos, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
@@ -41,6 +46,53 @@ class RepositorioDemo
             flock($bloqueo, LOCK_UN);
             fclose($bloqueo);
         }
+    }
+
+    private function modificarPostgres(Closure $operacion): mixed
+    {
+        return DB::connection('pgsql')->transaction(function () use ($operacion): mixed {
+            $tabla = DB::connection('pgsql')->table('flota_operativa');
+            $fila = (clone $tabla)->where('id', 1)->lockForUpdate()->first();
+            if ($fila === null) {
+                $tabla->insertOrIgnore(['id'=>1, 'datos'=>json_encode($this->iniciales(), JSON_THROW_ON_ERROR)]);
+                $fila = (clone $tabla)->where('id', 1)->lockForUpdate()->first();
+            }
+            $antes = json_decode($fila->datos, true, 512, JSON_THROW_ON_ERROR);
+            $datos = $this->completar($antes);
+            $resultado = $operacion($datos);
+            if ($antes !== $datos) {
+                $tabla->where('id', 1)->update(['datos'=>json_encode($datos, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)]);
+            }
+            return $resultado;
+        }, 3);
+    }
+
+    public function importarPostgres(string $archivo): bool
+    {
+        $datos = $this->completar(json_decode(File::get($archivo), true, 512, JSON_THROW_ON_ERROR));
+        return DB::connection('pgsql')->table('flota_operativa')->insertOrIgnore([
+            'id'=>1,
+            'datos'=>json_encode($datos, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
+        ]) === 1;
+    }
+
+    private function completar(mixed $datos): array
+    {
+        if (!is_array($datos)) {
+            throw new RuntimeException('Los datos de FloatMate deben ser un objeto JSON.');
+        }
+        foreach (['vehiculos', 'viajes', 'rutas', 'conductores'] as $coleccion) {
+            if (!isset($datos[$coleccion]) || !is_array($datos[$coleccion]) || !array_is_list($datos[$coleccion])) {
+                throw new RuntimeException('Los datos de FloatMate no tienen la estructura esperada.');
+            }
+        }
+        $datos += ['combustible'=>[], 'mantenimientos'=>[], 'incidentes'=>[]];
+        foreach (['combustible', 'mantenimientos', 'incidentes'] as $coleccion) {
+            if (!is_array($datos[$coleccion]) || !array_is_list($datos[$coleccion])) {
+                throw new RuntimeException('Los registros de FloatMate no tienen la estructura esperada.');
+            }
+        }
+        return $datos;
     }
 
     private function iniciales(): array
