@@ -80,7 +80,7 @@ El plan gratuito suspende el servicio si está inactivo y lo reactiva al recibir
 
 - El modo local guarda los datos en `backend/storage/app/demo/flota.json`. Puede abrir datos del tercer avance y agrega las nuevas colecciones al leerlos.
 - PostgreSQL es una opción de persistencia. Usa un documento JSONB protegido por una transacción y bloqueo de fila. Consulta [configuración, roles y pruebas](docs/OPERACION.md).
-- Las cuentas opcionales de Operador y Consulta se habilitan con hashes propios. El administrador gestiona catálogos y vehículos. El operador despacha y registra actividad. Consulta accede al resumen y a exportaciones.
+- Desde **Accesos**, el administrador crea cuentas individuales de Operador y Conductor. Vincula cada conductor a su registro de Catálogos. En **Mis viajes**, el conductor consulta sus asignaciones, confirma que las recibió y reporta la llegada o una novedad. El despacho conserva el control de salida y el inicio del viaje. Las cuentas y los datos de ensayo se reinician juntos en la demo gratuita de Render.
 - Los incidentes de esta entrega conservan detalle y gravedad. El alojamiento de evidencias, el cálculo de consumo por distancia y la integración con servicios externos quedan fuera del alcance implementado.
 
 **Equipo** · Tomás Yepes, Cristian Benites y Mateo Gallo.

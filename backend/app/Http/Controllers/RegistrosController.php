@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\PrecioAcpmCreg;
 use App\Services\RepositorioDemo;
+use App\Services\ViajesDelConductor;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -71,6 +72,9 @@ class RegistrosController extends Controller
             $nuevo['registrado_por'] = $request->session()->get('usuario_demo.nombre');
             if ($tipo === 'incidentes') {
                 $viaje = collect($flota['viajes'])->firstWhere('id', (int) $datos['viaje_id']);
+                if ($request->session()->get('usuario_demo.rol') === 'Conductor') {
+                    ViajesDelConductor::autorizar($viaje, (int) $request->session()->get('usuario_demo.conductor_id'));
+                }
                 if (!$viaje || !in_array($viaje['estado'], ['EN_CURSO','FINALIZADO'], true)) {
                     throw ValidationException::withMessages(['viaje_id'=>'Selecciona un viaje en curso o finalizado.']);
                 }
@@ -98,6 +102,11 @@ class RegistrosController extends Controller
             return $nuevo;
         });
         return response()->json(['message'=>'Registro guardado.', 'item'=>$item], 201);
+    }
+
+    public function reportarIncidentePropio(Request $request, RepositorioDemo $repositorio, int $id): JsonResponse
+    {
+        return $this->guardar($request->merge(['viaje_id'=>$id, 'fecha'=>Carbon::today('America/Bogota')->toDateString()]), $repositorio, 'incidentes');
     }
 
     private function aplicarMantenimiento(array $flota, array &$bus, array &$registro): void

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\AccesosOperativos;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -9,7 +10,7 @@ use Illuminate\Support\Facades\Validator;
 
 class AccesoController extends Controller
 {
-    public function ingresar(Request $request): JsonResponse
+    public function ingresar(Request $request, AccesosOperativos $accesos): JsonResponse
     {
         $validador = Validator::make($request->all(), [
             'usuario' => ['required', 'string', 'max:60'],
@@ -25,6 +26,9 @@ class AccesoController extends Controller
         $cuenta = hash_equals(config('demo.usuario'), $usuario)
             ? ['hash'=>config('demo.clave_hash'), 'perfil'=>config('demo.perfil')]
             : config('demo.cuentas')[$usuario] ?? null;
+        if (empty($cuenta['hash'])) {
+            $cuenta = $accesos->buscar($usuario);
+        }
         $hash = $cuenta['hash'] ?? null;
         $claveCorrecta = strlen($datos['clave']) <= 72 && !str_contains($datos['clave'], "\0")
             && Hash::check($datos['clave'], $hash ?: config('demo.clave_hash'));
@@ -32,8 +36,12 @@ class AccesoController extends Controller
             return response()->json(['message' => 'Usuario o contraseña incorrectos. Intenta de nuevo.'], 422);
         }
 
-        $request->session()->regenerate();
+        $request->session()->regenerate(true);
         $request->session()->put('usuario_demo', $cuenta['perfil']);
+        $request->session()->forget('acceso_operativo');
+        if (isset($cuenta['revision'])) {
+            $request->session()->put('acceso_operativo', ['usuario'=>$cuenta['usuario'], 'revision'=>$cuenta['revision']]);
+        }
 
         return response()->json(['usuario' => $cuenta['perfil']])->header('Cache-Control', 'no-store');
     }

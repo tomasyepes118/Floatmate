@@ -432,6 +432,66 @@ try {
       await mp.evaluate(() => document.documentElement.scrollWidth === document.documentElement.clientWidth &&
         [...document.querySelectorAll('.tabla-operacion, .toolbar')].every(elemento => elemento.scrollWidth <= elemento.clientWidth)));
   }
+
+  await pagina.getByRole('link', { name:'Accesos', exact:true }).click();
+  for (const [usuario, rol] of [['operador.demo', 'Operador'], ['carlos.demo', 'Conductor']]) {
+    await pagina.getByRole('button', { name:'Crear cuenta', exact:true }).click();
+    await dialogo.getByLabel('Usuario', { exact:true }).fill(usuario);
+    await dialogo.getByLabel('Rol', { exact:true }).selectOption(rol);
+    if (rol === 'Conductor') await dialogo.getByLabel('Conductor del catálogo').selectOption({ label:'Carlos Restrepo' });
+    else await dialogo.getByLabel('Nombre completo').fill('Operador de prueba');
+    await dialogo.getByLabel('Nueva contraseña').fill('Acceso-demostracion-2026');
+    await dialogo.getByRole('button', { name:'Guardar cuenta' }).click();
+    await pagina.getByRole('row').filter({ hasText:usuario }).waitFor();
+    comprobar(`El administrador crea la cuenta de ${rol} desde Accesos`,
+      await pagina.getByRole('row').filter({ hasText:usuario }).getByText(rol, { exact:true }).isVisible());
+  }
+  await foto(pagina, 'accesos-operativos.png');
+
+  const portal = await navegador.newPage({ viewport:{width:320,height:740} });
+  portal.on('pageerror', error => errores.push(error.message));
+  await portal.goto(`${origen}/login`);
+  await portal.getByLabel('Usuario', { exact:true }).fill('carlos.demo');
+  await portal.getByLabel('Contraseña', { exact:true }).fill('Acceso-demostracion-2026');
+  await portal.getByRole('button', { name:'Ingresar', exact:true }).click();
+  await portal.waitForURL('**/mis-viajes');
+  await portal.getByRole('heading', { name:'Mis viajes', exact:true }).waitFor();
+  comprobar('En móvil, el conductor entra solo a sus viajes y la página cabe a 320 px',
+    await portal.getByRole('article').count() === 1 && await portal.getByText('Viaje V-9001').isVisible() &&
+    await portal.getByRole('navigation', { name:'Navegación principal' }).getByRole('link').count() === 1 &&
+    await portal.evaluate(() => document.documentElement.scrollWidth === document.documentElement.clientWidth));
+  await portal.screenshot({ path:resolve(capturas, 'mis-viajes-movil.png'), fullPage:true });
+
+  const dialogoConductor = portal.getByRole('dialog');
+  await portal.getByRole('button', { name:'Confirmar asignación', exact:true }).click();
+  await dialogoConductor.getByRole('button', { name:'Confirmar', exact:true }).click();
+  await portal.getByText('Asignación confirmada', { exact:true }).waitFor();
+  await pagina.getByRole('link', { name:'Viajes', exact:true }).click();
+  const viajeCarlos = pagina.getByRole('row').filter({ hasText:'V-9001' });
+  comprobar('La confirmación del conductor aparece en el despacho',
+    await viajeCarlos.getByText('Confirmado por conductor', { exact:true }).isVisible());
+  await viajeCarlos.getByRole('button', { name:'Registrar control', exact:true }).click();
+  await dialogo.getByLabel('Número de ticket').fill('PORTAL-9001');
+  await dialogo.getByLabel('Alcoholemia en mg/L').fill('0');
+  await dialogo.getByRole('button', {name:'Guardar control'}).click();
+  await viajeCarlos.getByRole('button', { name:'Iniciar viaje', exact:true }).click();
+  await dialogo.getByRole('button', {name:'Confirmar inicio'}).click();
+  await viajeCarlos.getByText('En curso', { exact:true }).waitFor();
+  await portal.reload();
+  await portal.getByRole('button', { name:'Reportar novedad', exact:true }).click();
+  await dialogoConductor.getByLabel('Gravedad').selectOption('BAJA');
+  await dialogoConductor.getByLabel('Detalle de la novedad').fill('Novedad desde el portal del conductor');
+  await dialogoConductor.getByRole('button', { name:'Enviar novedad' }).click();
+  await portal.getByText('Novedad registrada.', { exact:true }).waitFor();
+  await portal.getByRole('button', { name:'Registrar llegada', exact:true }).click();
+  await dialogoConductor.getByLabel('Kilometraje de llegada').fill('35000');
+  await dialogoConductor.getByRole('button', { name:'Guardar llegada' }).click();
+  await portal.getByText('Finalizado', { exact:true }).waitFor();
+  const registrosConductor = await contexto.request.get(`${origen}/api/registros`).then(r => r.json());
+  comprobar('La llegada desde móvil finaliza el viaje y la novedad aparece en Registros',
+    registrosConductor.viajes.some(viaje => viaje.id === 9001 && viaje.estado === 'FINALIZADO') &&
+    registrosConductor.incidentes.some(incidente => incidente.viaje_id === 9001 && incidente.registrado_por === 'Carlos Restrepo'));
+  await portal.close();
   comprobar('El recorrido no genera errores JavaScript',errores.length===0);
   await writeFile(resolve(capturas,'resultados.json'),JSON.stringify({fecha:new Date().toISOString(),comprobaciones:resultados.length,resultados},null,2));
   console.log(resultados.map(x=>`PASS ${x}`).join('\n'));

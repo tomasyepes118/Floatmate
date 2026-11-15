@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
 export default async function Resumen() {
   const respuesta = await consultarServidor('resumen');
   if (respuesta.estado === 'sin-sesion') redirect('/login');
+  if (respuesta.estado === 'sin-permiso') redirect('/mis-viajes');
   if (respuesta.estado === 'no-disponible') {
     return <main className="service-error"><h1>No pudimos cargar el resumen</h1><p>Revisa que Laravel esté iniciado e intenta de nuevo.</p><a href="/resumen" className="btn btn-primary">Reintentar</a><a href="/login" className="btn btn-light">Volver al acceso</a></main>;
   }

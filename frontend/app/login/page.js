@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { inter } from '../tipografia';
 import { consultarServidor } from '../../lib/servidor';
+import { inicioSesion } from '../../lib/presentacion';
 import FormularioAcceso from '../../components/FormularioAcceso';
 import Marca from '../../components/Marca';
 
@@ -8,7 +9,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function Login() {
   const sesion = await consultarServidor('sesion');
-  if (sesion.estado === 'correcto') redirect('/resumen');
+  if (sesion.estado === 'correcto') redirect(inicioSesion(sesion.datos.usuario.rol));
   return (
     <main className={`login-layout ${inter.className}`}>
       <section className="login-hero" aria-label="FloatMate">

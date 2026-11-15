@@ -8,7 +8,13 @@
 - **Incidentes.** Se asocian a un viaje en curso o finalizado y al vehículo correspondiente. Se registra la fecha, la gravedad, el detalle y el nombre del perfil que lo guardó.
 - **CSV.** La descarga incluye los registros completos del módulo, con encabezados y separador de punto y coma.
 
-## Cuentas opcionales
+## Accesos por rol
+
+Entra como administrador y abre **Accesos → Crear cuenta**. Elige **Operador** y escribe su nombre, o elige **Conductor** y vincula una persona registrada en **Catálogos → Conductores**. Asigna un usuario único y una contraseña de al menos 12 caracteres. Cada persona entra por el mismo formulario con su cuenta. Desde Accesos puedes cambiar la contraseña o desactivar la cuenta. Ambas acciones cierran las sesiones anteriores de esa cuenta.
+
+La confirmación del conductor se ve en **Viajes**. La llegada actualiza el kilometraje y la disponibilidad con las mismas reglas del despacho. Las novedades aparecen en **Registros → Incidentes**. Las cuentas creadas desde el panel usan el mismo almacén que los datos operativos.
+
+### Cuentas por configuración
 
 Desde `backend`, genera dos hashes con contraseñas de prueba distintas elegidas por el equipo. Ejecuta el siguiente comando una vez por cuenta:
 
@@ -20,8 +26,9 @@ En `.env`, pega los hashes entre comillas simples en `DEMO_OPERADOR_HASH` y `DEM
 
 | Perfil | Acceso |
 |---|---|
-| Administrador | Inventario, catálogos, despacho, registros y exportaciones |
+| Administrador | Accesos de operadores y conductores, inventario, catálogos, despacho, registros y exportaciones |
 | Operador | Consulta del inventario, despacho, registros y exportaciones |
+| Conductor | Mis viajes, confirmación de asignación, llegada e incidentes propios |
 | Consulta | Resumen y exportaciones |
 
 ## PostgreSQL

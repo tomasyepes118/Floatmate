@@ -12,5 +12,6 @@ export default async function PaginaRecorrido({ searchParams }) {
   if (respuesta.estado !== 'correcto') return <ServicioNoDisponible ruta="/recorrido" />;
   const { paso } = await searchParams;
   const { usuario } = respuesta.datos;
+  if (usuario.rol === 'Conductor') redirect('/mis-viajes');
   return <MarcoAplicacion usuario={usuario}><Recorrido rol={usuario.rol} pasoInicial={paso} /></MarcoAplicacion>;
 }
