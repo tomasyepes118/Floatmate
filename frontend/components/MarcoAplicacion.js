@@ -1,10 +1,10 @@
 import BarraLateral from './BarraLateral';
 import Link from 'next/link';
 
-export default function MarcoAplicacion({ usuario, children }) {
-  return <>
+export default function MarcoAplicacion({ usuario, children, className, mostrarIconos = false }) {
+  return <div className={className}>
     <a href="#contenido" className="skip-link">Ir al contenido</a>
-    <BarraLateral usuario={usuario} />
+    <BarraLateral usuario={usuario} mostrarIconos={mostrarIconos} />
     <div className="workspace">
       <header className="topbar">
         <span>Centro de operaciones</span>
@@ -16,5 +16,5 @@ export default function MarcoAplicacion({ usuario, children }) {
       <main id="contenido">{children}</main>
       <footer>FloatMate · Prototipo académico · Programación Web</footer>
     </div>
-  </>;
+  </div>;
 }

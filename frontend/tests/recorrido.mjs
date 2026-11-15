@@ -13,8 +13,9 @@ const foto = (pagina, nombre) => /error|registrar|programar|registro|programacio
 
 async function ingresar(pagina) {
   await pagina.getByLabel('Usuario', { exact: true }).fill('admin');
-  await pagina.getByLabel('Contraseña', { exact: true }).fill('floatmate123');
-  await pagina.getByRole('button', { name: 'Ingresar', exact: true }).click();
+  const clave = pagina.getByLabel('Contraseña', { exact: true });
+  await clave.fill('floatmate123');
+  await clave.press('Enter');
   await pagina.waitForURL('**/resumen');
   await pagina.getByRole('heading', { name: 'Resumen de la flota' }).waitFor();
 }
@@ -26,6 +27,25 @@ async function enviar(contexto, ruta, datos) {
 }
 
 try {
+  for (const width of [320, 390, 768, 1440]) {
+    const vista = await navegador.newPage({ viewport: { width, height: width === 320 ? 740 : 900 } });
+    const fotos = [];
+    vista.on('request', peticion => {
+      if (peticion.url().includes('/images/login/floatmate-bus-')) fotos.push(peticion.url());
+    });
+    await vista.goto(`${origen}/login`, { waitUntil: 'load' });
+    const variante = width < 880 ? 'mobile' : 'desktop';
+    comprobar(`El login a ${width} px carga únicamente la foto ${variante}`,
+      fotos.length === 1 && fotos[0].endsWith(`floatmate-bus-${variante}.webp`) &&
+      await vista.locator('.login-photo img').evaluate(imagen => imagen.naturalWidth > 0));
+    comprobar(`El login a ${width} px cabe sin desbordamiento horizontal`,
+      await vista.evaluate(() => document.documentElement.scrollWidth === document.documentElement.clientWidth));
+    comprobar(`El ejemplo de recorrido se muestra según el ancho de ${width} px`,
+      await vista.getByText('Recorrido · R12').isVisible() === (variante === 'desktop'));
+    await vista.screenshot({ path: resolve(capturas, `login-${width}.png`), fullPage: true });
+    await vista.close();
+  }
+
   const contexto = await navegador.newContext({ viewport: { width: 1440, height: 850 }, deviceScaleFactor: 1 });
   const pagina = await contexto.newPage();
   pagina.on('pageerror', error => errores.push(error.message));
@@ -34,8 +54,30 @@ try {
     await pagina.waitForURL('**/login');
     comprobar(`${ruta} exige una sesión`, pagina.url().endsWith('/login'));
   }
-  await pagina.getByLabel('Usuario', { exact: true }).fill('admin');
-  await pagina.getByLabel('Contraseña', { exact: true }).fill('incorrecta');
+  const usuarioLogin = pagina.getByLabel('Usuario', { exact: true });
+  const claveLogin = pagina.getByLabel('Contraseña', { exact: true });
+  await pagina.keyboard.press('Tab');
+  comprobar('El primer campo del login recibe foco visible con el teclado',
+    await usuarioLogin.evaluate(campo => document.activeElement === campo && getComputedStyle(campo).outlineStyle === 'solid'));
+  const demo = pagina.getByRole('complementary', { name: 'Acceso de demostración' });
+  comprobar('El bloque de demostración sigue siendo informativo y muestra el acceso local',
+    await demo.getByText('Versión de demostración con datos de ejemplo.').isVisible() &&
+    await demo.getByText('floatmate123').isVisible() && await demo.getByRole('link').count() === 0 &&
+    await demo.getByRole('button').count() === 0);
+  await usuarioLogin.fill('admin');
+  await claveLogin.fill('incorrecta');
+  await pagina.getByRole('button', { name: 'Mostrar contraseña' }).click();
+  comprobar('El botón muestra la contraseña y cambia de nombre accesible',
+    await claveLogin.getAttribute('type') === 'text' && await pagina.getByRole('button', { name: 'Ocultar contraseña' }).isVisible());
+  await pagina.getByRole('button', { name: 'Ocultar contraseña' }).click();
+  comprobar('El botón vuelve a ocultar la contraseña sin borrar el valor',
+    await claveLogin.getAttribute('type') === 'password' && await claveLogin.inputValue() === 'incorrecta');
+  await pagina.route('**/api/login', async peticion => {
+    await pagina.getByRole('button', { name: 'Ingresando…' }).waitFor();
+    comprobar('El login anuncia la carga y bloquea envíos repetidos',
+      await pagina.getByRole('status').textContent() === 'Ingresando…' && await pagina.getByRole('button', { name: 'Ingresando…' }).isDisabled());
+    await peticion.continue();
+  }, { times: 1 });
   await pagina.getByRole('button', { name: 'Ingresar', exact: true }).click();
   await pagina.getByText('Usuario o contraseña incorrectos. Intenta de nuevo.', { exact: true }).waitFor();
   comprobar('El login rechaza una contraseña incorrecta', pagina.url().endsWith('/login'));
@@ -44,6 +86,34 @@ try {
   assert.equal(catalogos.pruebas_navegador, true, 'Inicia Laravel con DEMO_E2E=true y DEMO_DATA_PATH apuntando a una carpeta de pruebas antes de ejecutar este recorrido.');
   const baseResumen = await (await contexto.request.get(`${origen}/api/resumen`)).json();
   comprobar('Login y resumen funcionan', await pagina.locator('.metric').count()===4);
+  const proximaSalida = pagina.getByRole('region', { name:'Próxima salida' });
+  const [primero] = baseResumen.viajes;
+  comprobar('El resumen muestra la ruta, fecha, hora y placa de la próxima salida',
+    await proximaSalida.getByText(primero.ruta.replace(' - ', ' → '), { exact:true }).isVisible() &&
+    await proximaSalida.locator('time').getAttribute('datetime') === primero.salida_iso &&
+    await proximaSalida.getByText(primero.placa, { exact:true }).isVisible());
+  const estadosResumen = pagina.getByRole('region', { name:'Estado de los vehículos' });
+  for (const estado of baseResumen.estados) {
+    const fila = estadosResumen.getByRole('listitem').filter({ hasText:estado.nombre });
+    const ancho = await fila.locator('.resumen-estado-barra span').evaluate(barra => parseFloat(barra.style.width));
+    comprobar(`El estado ${estado.nombre} muestra el total y su proporción`,
+      await fila.getByText(String(estado.cantidad), { exact:true }).isVisible() &&
+      Math.abs(ancho - estado.cantidad / baseResumen.indicadores[0].valor * 100) < 0.01);
+  }
+  await pagina.screenshot({ path:resolve(capturas, 'resumen-escritorio.png'), fullPage:true });
+  for (const width of [320, 390, 768]) {
+    await pagina.setViewportSize({ width, height:844 });
+    const viaje = pagina.locator('.resumen-viajes tbody tr').first();
+    comprobar(`El resumen a ${width} px muestra los datos del viaje sin desbordamiento`,
+      await pagina.evaluate(() => document.documentElement.scrollWidth === document.documentElement.clientWidth) &&
+      await viaje.getByText(primero.ruta.replace(' - ', ' → '), { exact:true }).isVisible() &&
+      await viaje.getByText(primero.conductor, { exact:true }).isVisible() &&
+      await viaje.getByText(primero.salida, { exact:true }).isVisible() &&
+      await viaje.getByText(primero.placa, { exact:true }).isVisible() &&
+      await viaje.getByText(primero.estado, { exact:true }).isVisible());
+    if (width === 390) await pagina.screenshot({ path:resolve(capturas, 'resumen-movil.png'), fullPage:true });
+  }
+  await pagina.setViewportSize({ width:1440, height:850 });
   await pagina.getByRole('link', { name: 'Vehículos', exact: true }).click();
   await pagina.waitForURL('**/vehiculos');
   await pagina.getByRole('heading', { name: 'Inventario de vehículos' }).waitFor();

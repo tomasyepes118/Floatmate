@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class AccesoTest extends TestCase
@@ -45,6 +46,22 @@ class AccesoTest extends TestCase
         $this->postJson('/api/login', ['usuario' => 'admin', 'clave' => 'floatmate123'])->assertOk();
         $this->postJson('/api/logout')->assertOk();
         $this->getJson('/api/resumen')->assertUnauthorized();
+    }
+
+    public function test_el_resumen_muestra_las_salidas_programadas_futuras_en_hora_colombiana(): void
+    {
+        $this->travelTo(Carbon::parse('2026-11-15 10:00', 'America/Bogota'));
+        $this->postJson('/api/login', ['usuario'=>'admin', 'clave'=>'floatmate123'])->assertOk();
+        $this->getJson('/api/resumen')->assertOk()->assertJsonCount(2, 'viajes')
+            ->assertJsonPath('viajes.0.salida_iso', '2026-11-16T07:30-05:00');
+
+        $this->travelTo(Carbon::parse('2026-11-16 07:30', 'America/Bogota'));
+        $this->getJson('/api/resumen')->assertOk()->assertJsonCount(1, 'viajes')
+            ->assertJsonPath('viajes.0.placa', 'JRC728')->assertJsonPath('indicadores.2.valor', 2);
+
+        $this->travelTo(Carbon::parse('2026-11-17 08:01', 'America/Bogota'));
+        $this->getJson('/api/resumen')->assertOk()->assertJsonCount(0, 'viajes');
+        $this->travelBack();
     }
 
     public function test_los_intentos_repetidos_se_limitan(): void
