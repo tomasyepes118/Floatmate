@@ -39,7 +39,9 @@ export async function enviarAccion(ruta, datos = {}, metodo = 'POST') {
       : respuesta.status === 429
         ? 'Has realizado varios intentos. Espera un minuto y vuelve a intentar.'
         : contenido.message || 'No pudimos completar la solicitud. Intenta de nuevo.';
-    throw new ErrorApi(mensaje, respuesta.status, contenido.errors || {});
+    const error = new ErrorApi(mensaje, respuesta.status, contenido.errors || {});
+    error.reintentarEn = Number(respuesta.headers.get('Retry-After'));
+    throw error;
   }
   return contenido;
 }

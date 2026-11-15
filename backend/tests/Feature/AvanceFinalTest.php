@@ -36,17 +36,20 @@ class AvanceFinalTest extends TestCase
     public function test_rutas_y_conductores_se_guardan_y_respetan_viajes_vigentes(): void
     {
         $this->ingresar();
-        $ruta = ['codigo'=>'r-05','origen'=>'Bello','destino'=>'Envigado','distancia'=>27.5,'duracion'=>50,'activa'=>'1'];
-        $id = $this->postJson('/api/catalogos/rutas', $ruta)->assertCreated()->assertJsonPath('item.codigo', 'R-05')->json('item.id');
-        $this->postJson('/api/catalogos/rutas', $ruta)->assertUnprocessable()->assertJsonValidationErrors('codigo');
-        $this->putJson("/api/catalogos/rutas/$id", array_replace($ruta, ['activa'=>'0', 'revision'=>0]))->assertOk()->assertJsonPath('item.activa', false);
+        $ruta = ['origen'=>'Bello','destino'=>'Envigado','distancia'=>27.5,'duracion'=>50,'activa'=>'1'];
+        $this->getJson('/api/catalogos')->assertOk()->assertJsonPath('siguiente_codigo_ruta', '0001');
+        $id = $this->postJson('/api/catalogos/rutas', $ruta)->assertCreated()->assertJsonPath('item.codigo', '0001')->json('item.id');
+        $this->getJson('/api/catalogos')->assertOk()->assertJsonPath('siguiente_codigo_ruta', '0002');
+        $this->postJson('/api/catalogos/rutas', $ruta + ['codigo'=>'0001'])->assertCreated()->assertJsonPath('item.codigo', '0002');
+        $this->putJson("/api/catalogos/rutas/$id", array_replace($ruta, ['activa'=>'0', 'revision'=>0, 'codigo'=>'9999']))
+            ->assertOk()->assertJsonPath('item.activa', false)->assertJsonPath('item.codigo', '0001');
         $this->putJson("/api/catalogos/rutas/$id", $ruta + ['revision'=>0])->assertConflict();
         $this->putJson('/api/catalogos/rutas/1', ['codigo'=>'R-NOR-001','origen'=>'Medellín','destino'=>'Rionegro','distancia'=>42,'duracion'=>60,'activa'=>'0','revision'=>0])
             ->assertUnprocessable()->assertJsonValidationErrors('activa');
         $this->postJson('/api/catalogos/conductores', ['nombre'=>'Conductora de prueba','licencia_vence'=>'2029-01-01','estado'=>'DISPONIBLE'])->assertCreated();
         $this->putJson('/api/catalogos/conductores/1', ['nombre'=>'Carlos Restrepo','licencia_vence'=>'2027-10-18','estado'=>'INACTIVO','revision'=>0])
             ->assertUnprocessable()->assertJsonValidationErrors('estado');
-        $this->getJson('/api/viajes')->assertOk()->assertJsonCount(5, 'rutas')->assertJsonCount(5, 'conductores');
+        $this->getJson('/api/viajes')->assertOk()->assertJsonCount(6, 'rutas')->assertJsonCount(5, 'conductores');
     }
 
     public function test_registros_actualizan_inventario_resumen_y_csv(): void

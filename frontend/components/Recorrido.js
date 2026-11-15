@@ -12,7 +12,7 @@ const pasos = [
   {
     id: 'rutas', titulo: 'Rutas', enlace: '/catalogos?seccion=rutas', admin: true,
     uso: 'Una ruta reúne origen, destino, distancia y duración. FloatMate usa esos datos para validar el horario y el kilometraje del viaje.',
-    accion: 'En Catálogos, pulsa Registrar ruta. Usa el código R-001, Medellín como origen, Rionegro como destino, 42 km y 60 minutos. Déjala activa.',
+    accion: 'En Catálogos, pulsa Registrar ruta. Elige Medellín y Rionegro. La distancia y duración aparecen automáticamente. Para reproducir el escenario de mantenimiento del recorrido, ajústalas a 42 km y 60 minutos antes de guardar. Deja la ruta activa.',
   },
   {
     id: 'conductores', titulo: 'Conductores', enlace: '/catalogos?seccion=conductores', admin: true,

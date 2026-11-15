@@ -73,7 +73,7 @@ El plan gratuito suspende el servicio si está inactivo y lo reactiva al recibir
 
 ## Datos, cuentas y pruebas
 
-- En **Catálogos → Rutas**, elige el origen y el destino de un catálogo local de 125 municipios con datos [DIVIPOLA del DANE](https://www.datos.gov.co/Mapas-Nacionales/DIVIPOLA-C-digos-municipios/gdxc-w37w). **Calcular distancia y tiempo** rellena el formulario con los kilómetros por carretera y minutos estimados entre los puntos de referencia municipales. Puedes ajustar ambos valores antes de guardar.
+- En **Catálogos → Rutas**, elige el origen y el destino de un catálogo local de 125 municipios con datos [DIVIPOLA del DANE](https://www.datos.gov.co/Mapas-Nacionales/DIVIPOLA-C-digos-municipios/gdxc-w37w). Al seleccionar ambos municipios, el formulario rellena los kilómetros por carretera y los minutos estimados. Puedes ajustar ambos valores antes de guardar. Laravel asigna el código consecutivo al guardar.
 - La estimación usa [OSRM con datos de OpenStreetMap](https://routing.openstreetmap.de/about.html), con perfil de automóvil. Para usar un servidor OSRM propio, define `OSRM_URL` con su URL base. La estimación no incluye tráfico en vivo ni tiempos de parada. Si no hay resultado, el formulario admite valores manuales.
 - Al programar, **Revisar elegibilidad** explica problemas de capacidad, disponibilidad, licencia, horario y kilometraje. Si hay un bus compatible con la ruta y el conductor seleccionados, puedes elegirlo desde el resultado. La revisión no reserva recursos y Laravel vuelve a comprobar las reglas al confirmar.
 
