@@ -19,6 +19,7 @@ const fechaRegistro = { id:'fecha', etiqueta:'Fecha del registro', tipo:'date', 
 const detalle = { id:'detalle', etiqueta:'Detalle', tipo:'textarea', maxLength:500 };
 const vehiculo = { id:'vehiculo_id', etiqueta:'Vehículo', opciones:vehiculos };
 const distancia = { id:'distancia', etiqueta:'Distancia en km', tipo:'number', min:0.01, max:5000, step:0.01 };
+const municipios = datos => datos.municipios.map(municipio => [municipio.nombre, municipio.nombre]);
 
 const modulos = {
   rutas: {
@@ -27,7 +28,7 @@ const modulos = {
     fila:ruta => [ruta.codigo, `${ruta.origen} – ${ruta.destino}`, `${numero(ruta.distancia)} km`, `${ruta.duracion} min`, ruta.activa ? 'Activa' : 'Inactiva'],
     campos:[
       { id:'codigo', etiqueta:'Código de ruta', maxLength:15, pattern:'[A-Za-z0-9\\-]+' },
-      { id:'origen', etiqueta:'Origen', maxLength:60 }, { id:'destino', etiqueta:'Destino', maxLength:60 },
+      { id:'origen', etiqueta:'Origen', opciones:municipios }, { id:'destino', etiqueta:'Destino', opciones:municipios },
       distancia, { id:'duracion', etiqueta:'Duración en minutos', tipo:'number', min:1, max:4320 },
       { id:'activa', etiqueta:'Estado', opciones:() => [['1','Activa'],['0','Inactiva']], valor:ruta => ruta.activa === false ? '0' : '1' },
     ],
@@ -81,6 +82,8 @@ export default function GestionOperativa({ seccion, tipoInicial, datos }) {
   const [busqueda, setBusqueda] = useState('');
   const [formulario, setFormulario] = useState(null);
   const [ocupado, setOcupado] = useState(false);
+  const [calculando, setCalculando] = useState(false);
+  const [estimacion, setEstimacion] = useState('');
   const [actualizando, actualizar] = useTransition();
   const [mensaje, setMensaje] = useState('');
   const [error, setError] = useState('');
@@ -95,12 +98,50 @@ export default function GestionOperativa({ seccion, tipoInicial, datos }) {
     setMensaje('');
     setError('');
     setErrores({});
+    setEstimacion('');
     setFormulario(item);
+  }
+
+  async function calcular(evento) {
+    const campos = evento.currentTarget.form.elements;
+    const codigo = campo => datos.municipios.find(municipio => municipio.nombre === campos[campo].value)?.codigo;
+    const origen = codigo('origen');
+    const destino = codigo('destino');
+    setError('');
+    setErrores({});
+    setEstimacion('');
+    if (!origen || !destino || origen === destino) {
+      setError('Selecciona dos municipios distintos de Antioquia.');
+      return;
+    }
+    setCalculando(true);
+    try {
+      const resultado = await enviarAccion('catalogos/rutas/estimar', { origen, destino });
+      campos.distancia.value = resultado.distancia;
+      campos.duracion.value = resultado.duracion;
+      setEstimacion(`Estimación por carretera · ${numero(resultado.distancia)} km · ${resultado.duracion} min`);
+    } catch (fallo) {
+      setError(fallo.message);
+    } finally {
+      setCalculando(false);
+    }
+  }
+
+  function cambiarRuta(evento) {
+    if (tipo !== 'rutas') return;
+    const { name, form } = evento.target;
+    if (name === 'origen' || name === 'destino') {
+      form.elements.distancia.value = '';
+      form.elements.duracion.value = '';
+      setError('');
+      setErrores({});
+    }
+    if (['origen', 'destino', 'distancia', 'duracion'].includes(name)) setEstimacion('');
   }
 
   async function guardar(evento) {
     evento.preventDefault();
-    if (ocupado) return;
+    if (ocupado || calculando) return;
     const entrada = Object.fromEntries(new FormData(evento.currentTarget));
     const ruta = `${seccion}/${tipo}${editando ? `/${formulario.id}` : ''}`;
     setOcupado(true);
@@ -154,9 +195,9 @@ export default function GestionOperativa({ seccion, tipoInicial, datos }) {
         </tr>)}</tbody>
       </table></div> : <p className="empty-state" role="status">{busqueda ? 'No hay registros que coincidan con la búsqueda.' : 'Todavía no hay registros en esta sección.'}</p>}
     </article>
-    <Dialogo abierto={!!formulario} titulo={titulo} ocupado={ocupado} cerrar={() => setFormulario(null)}>
-      {formulario && <form onSubmit={guardar} aria-busy={ocupado}>
-        <fieldset disabled={ocupado}>
+    <Dialogo abierto={!!formulario} titulo={titulo} ocupado={ocupado || calculando} cerrar={() => setFormulario(null)}>
+      {formulario && <form onSubmit={guardar} onChange={cambiarRuta} aria-busy={ocupado || calculando}>
+        <fieldset disabled={ocupado || calculando}>
           {editando && <input type="hidden" name="revision" value={formulario.revision ?? 0} />}
           {tipo === 'conductores' && formulario.estado === 'EN_VIAJE' && <p className="operation-hint">El conductor conserva el estado En viaje hasta que se registre la llegada.</p>}
           <div className="operation-grid">
@@ -169,12 +210,20 @@ export default function GestionOperativa({ seccion, tipoInicial, datos }) {
               };
               return <Campo key={id} nombre={id} etiqueta={etiqueta} errores={errores}>
                 {lista ? <select className="form-select" {...atributos}><option value="">Selecciona</option>
+                  {(id === 'origen' || id === 'destino') && formulario[id] && !datos.municipios.some(municipio => municipio.nombre === formulario[id]) &&
+                    <option value={formulario[id]}>{formulario[id]} (ruta existente)</option>}
                   {lista(datos).map(([clave, texto]) => <option key={clave} value={clave}>{texto}</option>)}
                 </select> : control === 'textarea' ? <textarea className="form-control" rows={3} {...atributos} {...limites} />
                   : <input className="form-control" type={control} max={typeof max === 'function' ? max() : max} {...atributos} {...limites} />}
               </Campo>;
             })}
           </div>
+          {tipo === 'rutas' && <>
+            <button type="button" className="btn btn-light" onClick={calcular}>{calculando ? 'Calculando…' : 'Calcular distancia y tiempo'}</button>
+            {estimacion && <p className="operation-success" role="status">{estimacion}</p>}
+            <p className="operation-hint">Usa puntos de referencia municipales. El tiempo es estimado y puede variar por tráfico y paradas. Puedes ajustar los valores antes de guardar.</p>
+            <p className="operation-hint">Cálculo de OSRM · <a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a> · <a href="https://www.openstreetmap.org/fixthemap">Corregir el mapa</a></p>
+          </>}
           {error && <p className="form-error" role="alert">{error}</p>}
           <button type="submit" className="btn btn-primary">{ocupado ? 'Guardando…' : 'Guardar'}</button>
         </fieldset>

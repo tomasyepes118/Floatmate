@@ -4,6 +4,7 @@ use App\Http\Controllers\AccesoController;
 use App\Http\Controllers\ResumenController;
 use App\Http\Controllers\OperacionesController;
 use App\Http\Controllers\CatalogosController;
+use App\Http\Controllers\GeografiaController;
 use App\Http\Controllers\RegistrosController;
 use Illuminate\Support\Facades\Route;
 
@@ -22,6 +23,7 @@ Route::prefix('api')->group(function (): void {
             Route::get('/registros', [RegistrosController::class, 'index']);
         });
         Route::get('/catalogos', [CatalogosController::class, 'index'])->middleware('rol.operativo:Administrador');
+        Route::get('/municipios/antioquia', [GeografiaController::class, 'municipios'])->middleware('rol.operativo:Administrador');
         Route::get('/registros/{tipo}/csv', [RegistrosController::class, 'exportar'])
             ->whereIn('tipo', RegistrosController::TIPOS)->middleware('rol.operativo:Administrador,Operador,Consulta');
 
@@ -30,6 +32,7 @@ Route::prefix('api')->group(function (): void {
                 Route::post('/vehiculos', [OperacionesController::class, 'guardarVehiculo']);
                 Route::put('/vehiculos/{id}', [OperacionesController::class, 'guardarVehiculo'])->whereNumber('id');
                 Route::post('/catalogos/{tipo}', [CatalogosController::class, 'guardar'])->whereIn('tipo', CatalogosController::TIPOS);
+                Route::post('/catalogos/rutas/estimar', [GeografiaController::class, 'estimar']);
                 Route::put('/catalogos/{tipo}/{id}', [CatalogosController::class, 'guardar'])->whereIn('tipo', CatalogosController::TIPOS)->whereNumber('id');
             });
             Route::middleware('rol.operativo:Administrador,Operador')->group(function (): void {

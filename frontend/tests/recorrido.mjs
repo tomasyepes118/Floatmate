@@ -220,7 +220,15 @@ try {
     }
   }
   const guardarRegistro = () => dialogo.getByRole('button', { name:'Guardar', exact:true }).click();
-  await llenar({ 'Código de ruta':'FINAL-01', Origen:'Bello', Destino:'Envigado', 'Distancia en km':'27.5', 'Duración en minutos':'55' });
+  await dialogo.getByLabel('Origen', { exact:true }).selectOption('Bello');
+  await dialogo.getByLabel('Destino', { exact:true }).selectOption('Envigado');
+  await pagina.route('**/api/catalogos/rutas/estimar', ruta => ruta.fulfill({json:{distancia:27.5, duracion:55}}));
+  await dialogo.getByRole('button', { name:'Calcular distancia y tiempo' }).click();
+  await dialogo.getByText('Estimación por carretera', {exact:false}).waitFor();
+  comprobar('El cálculo completa los campos de distancia y duración',
+    await dialogo.getByLabel('Distancia en km').inputValue() === '27.5' &&
+    await dialogo.getByLabel('Duración en minutos').inputValue() === '55');
+  await llenar({ 'Código de ruta':'FINAL-01' });
   await guardarRegistro();
   const rutaFinal = pagina.getByRole('row').filter({ hasText:'FINAL-01' });
   await rutaFinal.getByText('Bello – Envigado').waitFor();
