@@ -21,6 +21,7 @@ Route::prefix('api')->group(function (): void {
             Route::get('/vehiculos', [OperacionesController::class, 'vehiculos']);
             Route::get('/viajes', [OperacionesController::class, 'viajes']);
             Route::get('/registros', [RegistrosController::class, 'index']);
+            Route::get('/registros/combustible/acpm', [RegistrosController::class, 'precioAcpm'])->middleware('throttle:30,1,consulta-acpm');
         });
         Route::get('/catalogos', [CatalogosController::class, 'index'])->middleware('rol.operativo:Administrador');
         Route::get('/municipios/antioquia', [GeografiaController::class, 'municipios'])->middleware('rol.operativo:Administrador');

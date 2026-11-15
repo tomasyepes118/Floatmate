@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Campo from './Campo';
 import Dialogo from './Dialogo';
+import ReferenciaAcpm from './ReferenciaAcpm';
 import { BotonOperacion, BuscarOperacion, EstadoOperacion, PanelOperacion, TablaOperacion, TituloPagina, VacioOperacion } from './InterfazOperacion';
 import { enviarAccion } from '../lib/api';
 import { normalizar, numero } from '../lib/presentacion';
@@ -222,6 +223,11 @@ export default function GestionOperativa({ seccion, tipoInicial, datos }) {
               </Campo>;
             })}
           </div>
+          {tipo === 'combustible' && <ReferenciaAcpm aplicar={(campo, precio) => {
+            campo.value = precio.toFixed(2);
+            setError('');
+            setErrores(({ precio_litro:omitido, ...resto }) => resto);
+          }} />}
           {tipo === 'rutas' && <>
             {calculando && <p className="operation-hint" role="status">Consultando el recorrido por carretera…</p>}
             {estimacion && <p className="operation-success" role="status">{estimacion}</p>}

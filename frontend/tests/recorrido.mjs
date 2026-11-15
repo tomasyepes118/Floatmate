@@ -336,7 +336,18 @@ try {
       await pestana.getAttribute('aria-pressed') === 'true' && await pagina.getByText(texto, { exact:true }).isVisible());
   }
   await foto(pagina, 'modulo-combustible-sin-datos.png');
+  await pagina.route('**/api/registros/combustible/acpm', ruta => ruta.fulfill({json:{
+    ciudad:'Medellín', precio_galon:11641, precio_litro:3075.23, vigente_desde:'2026-11-01',
+    fuente:'https://creg.gov.co/publicaciones/15565/precios-de-combustibles-liquidos/',
+  }}));
   await pagina.getByRole('button', { name:'Registrar abastecimiento' }).click();
+  await dialogo.getByText(/ACPM en Medellín/).waitFor();
+  const precioLitro = dialogo.getByLabel('Precio por litro en COP');
+  comprobar('El formulario muestra la referencia por galón sin cambiar el precio de la factura',
+    (await dialogo.getByText(/ACPM en Medellín/).innerText()).includes('11.641') && await precioLitro.inputValue() === '');
+  await dialogo.getByRole('button', { name:/Usar .* COP por litro/ }).click();
+  comprobar('La referencia se puede copiar por litro y ajustar antes de guardar',
+    await precioLitro.inputValue() === '3075.23' && await precioLitro.isEditable());
   await dialogo.getByLabel('Vehículo').selectOption('1');
   await llenar({ Litros:'20.25', 'Precio por litro en COP':'10000', Detalle:'Abastecimiento de prueba' });
   await guardarRegistro();
@@ -399,7 +410,11 @@ try {
   await mp.getByRole('link', { name:'Registros', exact:true }).click();
   await mp.getByRole('heading', { name:'Registros de operación' }).waitFor();
   comprobar('Registros se adapta al ancho móvil', await mp.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+  await mp.route('**/api/registros/combustible/acpm', ruta => ruta.fulfill({status:503, json:{message:'Referencia no disponible'}}));
   await mp.getByRole('button', { name:'Registrar abastecimiento' }).click();
+  await mp.getByText(/Referencia de ACPM no disponible/).waitFor();
+  comprobar('El precio se puede registrar manualmente si la referencia no está disponible',
+    await mp.getByLabel('Precio por litro en COP').isEditable());
   comprobar('El formulario de combustible cabe en móvil', await mp.getByRole('dialog').evaluate(d => d.scrollWidth <= d.clientWidth));
   await foto(mp, '21-combustible-movil.png');
   await mp.getByRole('dialog').getByRole('button', { name:'Cerrar' }).click();

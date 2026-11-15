@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\PrecioAcpmCreg;
 use App\Services\RepositorioDemo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,6 +19,14 @@ class RegistrosController extends Controller
     public function index(Request $request, RepositorioDemo $repositorio): JsonResponse
     {
         return response()->json(['usuario'=>$request->session()->get('usuario_demo')] + $this->consulta($repositorio->leer()));
+    }
+
+    public function precioAcpm(PrecioAcpmCreg $fuente): JsonResponse
+    {
+        $precio = $fuente->consultar();
+        return $precio ? response()->json($precio) : response()->json([
+            'message'=>'No pudimos consultar la referencia de ACPM. Puedes registrar el precio de la factura.',
+        ], 503);
     }
 
     public function guardar(Request $request, RepositorioDemo $repositorio, string $tipo): JsonResponse
