@@ -8,9 +8,9 @@ export default function MarcoAplicacion({ usuario, children }) {
     <BarraLateral usuario={usuario} />
     <div className="workspace">
       <header className="topbar">
-        <span>Centro de operaciones</span>
+        <span>{usuario.rol === 'Conductor' ? 'Portal del conductor' : 'Centro de operaciones'}</span>
         <div className="topbar-actions">
-          <Link href="/recorrido" prefetch={false}>Recorrido guiado</Link>
+          {usuario.rol !== 'Conductor' && <Link href="/recorrido" prefetch={false}>Recorrido guiado</Link>}
           <span className="demo">Datos de demostración</span>
         </div>
       </header>

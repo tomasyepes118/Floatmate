@@ -145,6 +145,7 @@ export default function Viajes({ iniciales }) {
           <td data-label="Estado">
             <div className="trip-status">
               <EstadoOperacion estado={v.estado}>{estadosViaje[v.estado]}</EstadoOperacion>
+              {v.confirmado_por_conductor_en && <small>Confirmado por conductor</small>}
               {v.control_salida && <small className={v.control_salida.resultado === 'RECHAZADO' ? 'field-error' : ''}>
                 Control {v.control_salida.resultado.toLowerCase()}<br />Ticket {v.control_salida.numero_ticket}
               </small>}

@@ -108,6 +108,18 @@
 .referencia-acpm p + p { margin-top: 4px; }
 .referencia-acpm .btn { margin-top: 9px; padding: 6px 10px; font-size: 12px; }
 
+.viajes-conductor { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 14px; }
+.operacion .viaje-conductor { padding: 18px; overflow-wrap: anywhere; }
+.viaje-conductor-encabezado { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 7px 10px; margin-bottom: 14px; }
+.viaje-conductor-encabezado p { margin: 0 0 5px; }
+.viaje-conductor dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 130px), 1fr)); gap: 10px 16px; margin-bottom: 15px; font-variant-numeric: tabular-nums; }
+.viaje-conductor dt { color: var(--panel-secundario); font-size: 13px; font-weight: 500; }
+.viaje-conductor dd { margin: 2px 0 0; }
+.viaje-conductor-nota { white-space: pre-wrap; font-size: 14px; }
+.viaje-conductor-confirmado { color: #355c25; font-size: 13px; font-weight: 650; }
+.viaje-conductor .row-actions { justify-content: flex-start; gap: 8px; }
+.viaje-conductor .row-actions .btn { min-height: 43px; padding: 8px 12px; }
+
 .operacion .module-nav { display: flex; flex-wrap: wrap; gap: 0 5px; padding: 0; border-bottom: 1px solid var(--panel-borde); }
 .operacion .module-nav button {
   padding: 8px 12px 7px;

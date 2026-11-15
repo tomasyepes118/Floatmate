@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\RepositorioDemo;
+use App\Services\ViajesDelConductor;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -221,10 +222,16 @@ class OperacionesController extends Controller
         ])->validate();
 
         $estado = $datos['estado'];
-        $viaje = $repositorio->modificar(function (array &$registro) use ($datos, $estado, $id): array {
+        $conductorId = $request->session()->get('usuario_demo.rol') === 'Conductor'
+            ? (int) $request->session()->get('usuario_demo.conductor_id') : null;
+        $viaje = $repositorio->modificar(function (array &$registro) use ($datos, $estado, $id, $conductorId): array {
             $indice = array_search($id, array_column($registro['viajes'], 'id'), true);
             abort_if($indice === false, 404, 'No encontramos ese viaje.');
             $viaje = &$registro['viajes'][$indice];
+            if ($conductorId !== null) {
+                ViajesDelConductor::autorizar($viaje, $conductorId);
+                abort_unless($estado === 'FINALIZADO', 403, 'Solo puedes registrar tu llegada.');
+            }
             $origen = $estado === 'FINALIZADO' ? 'EN_CURSO' : 'PROGRAMADO';
             if ($viaje['estado'] !== $origen) {
                 throw ValidationException::withMessages(['estado'=>'El estado actual del viaje no permite esta acción.']);
@@ -276,7 +283,12 @@ class OperacionesController extends Controller
             'FINALIZADO' => 'Viaje finalizado correctamente.',
             'CANCELADO' => 'Viaje cancelado correctamente.',
         };
-        return response()->json(['message'=>$mensaje, 'viaje'=>$viaje]);
+        return response()->json($conductorId === null ? ['message'=>$mensaje, 'viaje'=>$viaje] : ['message'=>$mensaje]);
+    }
+
+    public function registrarLlegadaPropia(Request $request, RepositorioDemo $repositorio, int $id): JsonResponse
+    {
+        return $this->cambiarEstadoViaje($request->merge(['estado'=>'FINALIZADO']), $repositorio, $id);
     }
 
     private function validarAsignacion(array $registro, array $datos, Carbon $salida, ?int $viajeId = null): void

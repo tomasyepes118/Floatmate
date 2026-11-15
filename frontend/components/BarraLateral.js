@@ -11,10 +11,12 @@ export default function BarraLateral({ usuario }) {
   const ruta = usePathname();
   const [saliendo, setSaliendo] = useState(false);
   const [error, setError] = useState('');
-  const enlaces = [['resumen','Resumen']];
-  if (usuario.rol !== 'Consulta') enlaces.push(['vehiculos','Vehículos'], ['viajes','Viajes']);
+  const despacho = ['Administrador', 'Operador'].includes(usuario.rol);
+  const enlaces = usuario.rol === 'Conductor' ? [['mis-viajes','Mis viajes','viajes']] : [['resumen','Resumen']];
+  if (despacho) enlaces.push(['vehiculos','Vehículos'], ['viajes','Viajes']);
   if (usuario.rol === 'Administrador') enlaces.push(['catalogos','Catálogos']);
-  if (usuario.rol !== 'Consulta') enlaces.push(['registros','Registros']);
+  if (despacho) enlaces.push(['registros','Registros']);
+  if (usuario.rol === 'Administrador') enlaces.push(['accesos','Accesos']);
 
   async function salir() {
     setSaliendo(true);
@@ -33,9 +35,9 @@ export default function BarraLateral({ usuario }) {
     <Marca />
     <p className="nav-label">OPERACIÓN</p>
     <nav aria-label="Navegación principal">
-      {enlaces.map(([seccion, texto]) => {
+      {enlaces.map(([seccion, texto, icono = seccion]) => {
         const href = `/${seccion}`;
-        return <Link href={href} key={href} prefetch={false} className={ruta===href ? 'active' : ''} aria-current={ruta===href ? 'page' : undefined}><IconoOperacion nombre={seccion} />{texto}</Link>;
+        return <Link href={href} key={href} prefetch={false} className={ruta===href ? 'active' : ''} aria-current={ruta===href ? 'page' : undefined}><IconoOperacion nombre={icono} />{texto}</Link>;
       })}
     </nav>
     <div className="sidebar-bottom">

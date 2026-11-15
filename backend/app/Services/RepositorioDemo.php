@@ -86,8 +86,8 @@ class RepositorioDemo
                 throw new RuntimeException('Los datos de FloatMate no tienen la estructura esperada.');
             }
         }
-        $datos += ['combustible'=>[], 'mantenimientos'=>[], 'incidentes'=>[]];
-        foreach (['combustible', 'mantenimientos', 'incidentes'] as $coleccion) {
+        $datos += ['combustible'=>[], 'mantenimientos'=>[], 'incidentes'=>[], 'accesos'=>[]];
+        foreach (['combustible', 'mantenimientos', 'incidentes', 'accesos'] as $coleccion) {
             if (!is_array($datos[$coleccion]) || !array_is_list($datos[$coleccion])) {
                 throw new RuntimeException('Los registros de FloatMate no tienen la estructura esperada.');
             }

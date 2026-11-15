@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { enviarAccion } from '../lib/api';
+import { inicioSesion } from '../lib/presentacion';
 
 export default function FormularioAcceso({ servicioDisponible, mostrarCredenciales }) {
   const [visible, setVisible] = useState(false);
@@ -15,8 +16,8 @@ export default function FormularioAcceso({ servicioDisponible, mostrarCredencial
     setEnviando(true);
     const campos = new FormData(evento.currentTarget);
     try {
-      await enviarAccion('login', { usuario: campos.get('usuario').trim(), clave: campos.get('clave') });
-      window.location.assign('/resumen');
+      const { usuario } = await enviarAccion('login', { usuario: campos.get('usuario').trim(), clave: campos.get('clave') });
+      window.location.assign(inicioSesion(usuario.rol));
     } catch (fallo) {
       setError(fallo.message);
       setEnviando(false);
