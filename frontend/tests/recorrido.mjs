@@ -308,7 +308,7 @@ try {
   comprobar('El formulario reintenta automáticamente cuando el servicio está ocupado', consultasRuta === 2);
   await guardarRegistro();
   const rutaFinal = pagina.getByRole('row').filter({ has:pagina.getByRole('cell', { name:'0001', exact:true }) });
-  await rutaFinal.getByText('Bello – Envigado').waitFor();
+  await rutaFinal.getByText('Bello → Envigado').waitFor();
   comprobar('Una ruta nueva queda visible en catálogos', await rutaFinal.isVisible());
   await foto(pagina, '17-catalogos-pc.png');
   await rutaFinal.getByRole('button', { name:'Editar' }).click();
@@ -325,6 +325,17 @@ try {
   comprobar('El conductor nuevo se puede seleccionar al programar', (await contexto.request.get(`${origen}/api/viajes`).then(r => r.json())).conductores.some(c => c.nombre === 'Operación de prueba'));
 
   await pagina.getByRole('link', { name:'Registros', exact:true }).click();
+  for (const [seccion, texto] of [
+    ['Mantenimientos', 'Sin mantenimientos registrados'],
+    ['Incidentes', 'Sin incidentes registrados'],
+    ['Combustible', 'Sin abastecimientos registrados'],
+  ]) {
+    const pestana = pagina.getByRole('button', { name:seccion, exact:true });
+    await pestana.click();
+    comprobar(`${seccion} tiene una pestaña activa y su propio mensaje vacío`,
+      await pestana.getAttribute('aria-pressed') === 'true' && await pagina.getByText(texto, { exact:true }).isVisible());
+  }
+  await foto(pagina, 'modulo-combustible-sin-datos.png');
   await pagina.getByRole('button', { name:'Registrar abastecimiento' }).click();
   await dialogo.getByLabel('Vehículo').selectOption('1');
   await llenar({ Litros:'20.25', 'Precio por litro en COP':'10000', Detalle:'Abastecimiento de prueba' });
@@ -391,6 +402,21 @@ try {
   await mp.getByRole('button', { name:'Registrar abastecimiento' }).click();
   comprobar('El formulario de combustible cabe en móvil', await mp.getByRole('dialog').evaluate(d => d.scrollWidth <= d.clientWidth));
   await foto(mp, '21-combustible-movil.png');
+  await mp.getByRole('dialog').getByRole('button', { name:'Cerrar' }).click();
+  await mp.setViewportSize({ width:320, height:740 });
+  for (const [enlace, titulo, accion] of [
+    ['Vehículos', 'Inventario de vehículos', 'Registrar vehículo'],
+    ['Viajes', 'Programación de viajes', 'Programar viaje'],
+    ['Catálogos', 'Rutas', 'Registrar ruta'],
+    ['Registros', 'Combustible', 'Registrar abastecimiento'],
+  ]) {
+    await mp.getByRole('navigation', { name:'Navegación principal' }).getByRole('link', { name:enlace, exact:true }).click();
+    await mp.getByRole('heading', { name:titulo, exact:true }).waitFor();
+    comprobar(`${enlace} conserva su acción principal y cabe a 320 px`,
+      await mp.getByRole('button', { name:accion, exact:true }).isVisible() &&
+      await mp.evaluate(() => document.documentElement.scrollWidth === document.documentElement.clientWidth &&
+        [...document.querySelectorAll('.tabla-operacion, .toolbar')].every(elemento => elemento.scrollWidth <= elemento.clientWidth)));
+  }
   comprobar('El recorrido no genera errores JavaScript',errores.length===0);
   await writeFile(resolve(capturas,'resultados.json'),JSON.stringify({fecha:new Date().toISOString(),comprobaciones:resultados.length,resultados},null,2));
   console.log(resultados.map(x=>`PASS ${x}`).join('\n'));

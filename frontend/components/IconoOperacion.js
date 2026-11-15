@@ -8,6 +8,10 @@ const trazos = {
   mantenimiento: 'M21 6.5 17.5 10l-3.6-.8-.8-3.6L16.6 2A6 6 0 0 0 10 9.4l-7 7a3 3 0 0 0 4.2 4.2l7-7A6 6 0 0 0 21 6.5Z',
   salir: 'M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h5M8 12h13m-5-5 5 5-5 5',
   flecha: 'M3 12h17m-6-6 6 6-6 6',
+  buscar: 'M15.5 9.5a6 6 0 1 1-12 0 6 6 0 0 1 12 0ZM14 14l6 6',
+  agregar: 'M12 5v14M5 12h14',
+  combustible: 'M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16M2 21h15M4 10h11m0 3h2a1 1 0 0 1 1 1v3a2 2 0 0 0 4 0V9l-4-4m2 2v3h2',
+  incidente: 'M10.4 4.6 3 18a1.5 1.5 0 0 0 1.3 2.2h15.4A1.5 1.5 0 0 0 21 18L13.6 4.6a1.8 1.8 0 0 0-3.2 0ZM12 9v4m0 3h.01',
 };
 
 export default function IconoOperacion({ nombre }) {

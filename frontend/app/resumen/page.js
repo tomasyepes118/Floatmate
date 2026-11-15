@@ -2,8 +2,8 @@ import { redirect } from 'next/navigation';
 import { consultarServidor } from '../../lib/servidor';
 import MarcoAplicacion from '../../components/MarcoAplicacion';
 import IconoOperacion from '../../components/IconoOperacion';
+import { EstadoOperacion, PanelOperacion, TablaOperacion, TituloPagina } from '../../components/InterfazOperacion';
 import { numero } from '../../lib/presentacion';
-import { inter } from '../tipografia';
 import './resumen.css';
 
 export const dynamic = 'force-dynamic';
@@ -19,11 +19,8 @@ export default async function Resumen() {
   const totalVehiculos = estados.reduce((total, estado) => total + estado.cantidad, 0);
   const consulta = usuario.rol === 'Consulta';
 
-  return <MarcoAplicacion usuario={usuario} className={`resumen-operacion ${inter.className}`} mostrarIconos>
-    <div className="page-title resumen-titulo">
-      <h1>Resumen de la flota</h1>
-      <p>Revisa la disponibilidad y los próximos viajes de la operación.</p>
-    </div>
+  return <MarcoAplicacion usuario={usuario}>
+    <TituloPagina titulo="Resumen de la flota" descripcion="Revisa la disponibilidad y los próximos viajes de la operación." />
 
     <section className="proxima-salida" aria-labelledby="proxima-salida-titulo">
       <div className="proxima-salida-recorrido" aria-hidden="true"><span /><span /></div>
@@ -49,21 +46,17 @@ export default async function Resumen() {
     </section>
 
     <div className="resumen-operacion-grid">
-      <section className="panel resumen-viajes" aria-labelledby="resumen-viajes-titulo">
-        <div className="panel-heading">
-          <h2 id="resumen-viajes-titulo">Próximos viajes</h2>
-          {!consulta && <a href="/viajes">Ver programación <IconoOperacion nombre="flecha" /></a>}
-        </div>
-        {viajes.length ? <table className="table align-middle">
-          <thead><tr><th scope="col">Ruta</th><th scope="col">Salida</th><th scope="col">Vehículo</th><th scope="col">Estado</th></tr></thead>
-          <tbody>{viajes.map(viaje => <tr key={viaje.id}>
+      <PanelOperacion id="resumen-viajes-titulo" titulo="Próximos viajes" className="resumen-viajes"
+        accion={!consulta && <a href="/viajes">Ver programación <IconoOperacion nombre="flecha" /></a>}>
+        {viajes.length ? <TablaOperacion etiqueta="resumen-viajes-titulo" columnas={['Ruta', 'Salida', 'Vehículo', 'Estado']}>
+          {viajes.map(viaje => <tr key={viaje.id}>
             <td data-label="Ruta"><strong>{viaje.ruta.replace(' - ', ' → ')}</strong><small>{viaje.conductor}</small></td>
             <td data-label="Salida"><time dateTime={viaje.salida_iso}>{viaje.salida}</time></td>
             <td data-label="Vehículo">{viaje.placa}</td>
-            <td data-label="Estado"><span className="status status-moving">{viaje.estado}</span></td>
-          </tr>)}</tbody>
-        </table> : <p className="empty-state">No hay viajes programados.</p>}
-      </section>
+            <td data-label="Estado"><EstadoOperacion estado="PROGRAMADO">{viaje.estado}</EstadoOperacion></td>
+          </tr>)}
+        </TablaOperacion> : <p className="empty-state">No hay viajes programados.</p>}
+      </PanelOperacion>
 
       <section className="panel resumen-estados" aria-labelledby="resumen-estados-titulo">
         <h2 id="resumen-estados-titulo">Estado de los vehículos</h2>
@@ -79,19 +72,16 @@ export default async function Resumen() {
       </section>
     </div>
 
-    <section className="panel resumen-actividad" aria-labelledby="resumen-actividad-titulo">
-      <div className="panel-heading">
-        <h2 id="resumen-actividad-titulo">Actividad registrada</h2>
-        <a href={consulta ? '/api/registros/combustible/csv' : '/registros'}>
+    <PanelOperacion id="resumen-actividad-titulo" titulo="Actividad registrada" className="resumen-actividad"
+      accion={<a href={consulta ? '/api/registros/combustible/csv' : '/registros'}>
           {consulta ? 'Descargar combustible' : 'Consultar registros'} <IconoOperacion nombre="flecha" />
-        </a>
-      </div>
+        </a>}>
       <dl>
         <div><dt>Combustible</dt><dd>{numero(actividad.litros)} L</dd></div>
         <div><dt>Gasto en combustible</dt><dd>$ {numero(actividad.costo)} COP</dd></div>
         <div><dt>Mantenimientos</dt><dd>{numero(actividad.mantenimientos)}</dd></div>
         <div><dt>Incidentes</dt><dd>{numero(actividad.incidentes)}</dd></div>
       </dl>
-    </section>
+    </PanelOperacion>
   </MarcoAplicacion>;
 }

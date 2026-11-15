@@ -1,5 +1,6 @@
 import './bootstrap.min.css';
 import './globals.css';
+import './operacion.css';
 
 export const metadata = {
   title: 'FloatMate',

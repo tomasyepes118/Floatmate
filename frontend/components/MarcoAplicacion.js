@@ -1,10 +1,11 @@
 import BarraLateral from './BarraLateral';
 import Link from 'next/link';
+import { inter } from '../app/tipografia';
 
-export default function MarcoAplicacion({ usuario, children, className, mostrarIconos = false }) {
-  return <div className={className}>
+export default function MarcoAplicacion({ usuario, children }) {
+  return <div className={`operacion ${inter.className}`}>
     <a href="#contenido" className="skip-link">Ir al contenido</a>
-    <BarraLateral usuario={usuario} mostrarIconos={mostrarIconos} />
+    <BarraLateral usuario={usuario} />
     <div className="workspace">
       <header className="topbar">
         <span>Centro de operaciones</span>

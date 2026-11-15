@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import Dialogo from './Dialogo';
 import Campo from './Campo';
 import { enviarAccion } from '../lib/api';
-import { normalizar, fecha, numero, estadosViaje, claseEstado } from '../lib/presentacion';
+import { normalizar, fecha, numero, estadosViaje } from '../lib/presentacion';
+import { BotonOperacion, BuscarOperacion, EstadoOperacion, FiltroEstado, PanelOperacion, TablaOperacion, TituloPagina, VacioOperacion } from './InterfazOperacion';
 
 const acciones = {
   control: { titulo: 'Registrar control de salida', confirmar: 'Guardar control' },
@@ -120,19 +121,18 @@ export default function Viajes({ iniciales }) {
   }
 
   return <>
-    <div className="page-title"><h1>Viajes</h1><p>Programa recorridos y registra sus controles, salidas y llegadas.</p></div>
+    <TituloPagina titulo="Viajes" descripcion="Programa recorridos y registra sus controles, salidas y llegadas." />
     {mensaje && <p className="operation-success" role="status">{mensaje}</p>}
     <div className="toolbar">
-      <div className="search"><label htmlFor="buscar-viaje" className="visually-hidden">Buscar viaje</label><input id="buscar-viaje" className="form-control" type="search" placeholder="Buscar ruta, conductor o placa..." value={busqueda} onChange={e => setBusqueda(e.target.value)} /></div>
-      <label className="visually-hidden" htmlFor="estado-viaje">Filtrar viajes por estado</label><select id="estado-viaje" className="form-select" value={estado} onChange={e => setEstado(e.target.value)}><option value="">Todos los estados</option>{Object.entries(estadosViaje).map(([v,t]) => <option key={v} value={v}>{t}</option>)}</select>
-      <button type="button" className="btn btn-primary" onClick={abrir} disabled={actualizando || faltantes.length > 0} aria-describedby={faltantes.length ? 'requisitos-viaje' : undefined}>Programar viaje</button>
+      <BuscarOperacion id="buscar-viaje" etiqueta="Buscar viaje" placeholder="Buscar ruta, conductor o placa…" value={busqueda} onChange={e => setBusqueda(e.target.value)} />
+      <FiltroEstado id="estado-viaje" etiqueta="Filtrar viajes por estado" opciones={estadosViaje} value={estado} onChange={e => setEstado(e.target.value)} />
+      <BotonOperacion principal icono="agregar" onClick={abrir} disabled={actualizando || faltantes.length > 0} aria-describedby={faltantes.length ? 'requisitos-viaje' : undefined}>Programar viaje</BotonOperacion>
     </div>
     {faltantes.length > 0 && <p id="requisitos-viaje" className="operation-hint">Para programar un viaje necesitas {faltantes.join(', ')}. <a href="/recorrido?paso=viajes">Ver el recorrido</a></p>}
-    <article className="panel"><div className="panel-heading"><h2>Programación de viajes</h2><span role="status">{lista.length} {lista.length===1 ? 'viaje' : 'viajes'}</span></div>
-      {lista.length ? <div className="table-responsive"><table className="table align-middle">
-        <thead><tr><th>Ruta</th><th>Conductor</th><th>Vehículo</th><th>Salida prevista</th><th>Pasajeros</th><th>Estado</th><th>Acciones</th></tr></thead>
-        <tbody>{lista.map(v => <tr key={v.id}>
-          <td data-label="Ruta"><strong>{v.ruta.origen} - {v.ruta.destino}</strong><small>{v.ruta.codigo} · V-{v.id}</small></td>
+    <PanelOperacion id="programacion-viajes" titulo="Programación de viajes" contador={`${lista.length} ${lista.length === 1 ? 'viaje' : 'viajes'}`}>
+      {lista.length ? <TablaOperacion etiqueta="programacion-viajes" columnas={['Ruta', 'Conductor', 'Vehículo', 'Salida prevista', 'Pasajeros', 'Estado', 'Acciones']}>
+        {lista.map(v => <tr key={v.id}>
+          <td data-label="Ruta"><strong>{v.ruta.origen} → {v.ruta.destino}</strong><small>{v.ruta.codigo} · V-{v.id}</small></td>
           <td data-label="Conductor">{v.conductor.nombre}</td>
           <td data-label="Vehículo">{v.vehiculo.placa}</td>
           <td data-label="Salida prevista">
@@ -144,7 +144,7 @@ export default function Viajes({ iniciales }) {
           <td data-label="Pasajeros">{v.pasajeros}</td>
           <td data-label="Estado">
             <div className="trip-status">
-              <span className={`status status-${claseEstado(v.estado)}`}>{estadosViaje[v.estado]}</span>
+              <EstadoOperacion estado={v.estado}>{estadosViaje[v.estado]}</EstadoOperacion>
               {v.control_salida && <small className={v.control_salida.resultado === 'RECHAZADO' ? 'field-error' : ''}>
                 Control {v.control_salida.resultado.toLowerCase()}<br />Ticket {v.control_salida.numero_ticket}
               </small>}
@@ -152,16 +152,16 @@ export default function Viajes({ iniciales }) {
           </td>
           <td data-label="Acciones">
             <div className="row-actions">
-              {v.estado === 'PROGRAMADO' && !v.control_salida && <button type="button" className="btn btn-light btn-sm" onClick={() => abrirAccion('control', v)} disabled={actualizando}>Registrar control</button>}
-              {v.estado === 'PROGRAMADO' && v.control_salida?.resultado === 'APROBADO' && <button type="button" className="btn btn-primary btn-sm" onClick={() => abrirAccion('EN_CURSO', v)} disabled={actualizando}>Iniciar viaje</button>}
-              {v.estado === 'PROGRAMADO' && <button type="button" className="btn btn-light btn-sm" onClick={() => abrirAccion('CANCELADO', v)} disabled={actualizando}>Cancelar viaje</button>}
-              {v.estado === 'EN_CURSO' && <button type="button" className="btn btn-primary btn-sm" onClick={() => abrirAccion('FINALIZADO', v)} disabled={actualizando}>Finalizar viaje</button>}
+              {v.estado === 'PROGRAMADO' && !v.control_salida && <BotonOperacion compacto onClick={() => abrirAccion('control', v)} disabled={actualizando}>Registrar control</BotonOperacion>}
+              {v.estado === 'PROGRAMADO' && v.control_salida?.resultado === 'APROBADO' && <BotonOperacion compacto onClick={() => abrirAccion('EN_CURSO', v)} disabled={actualizando}>Iniciar viaje</BotonOperacion>}
+              {v.estado === 'PROGRAMADO' && <BotonOperacion compacto onClick={() => abrirAccion('CANCELADO', v)} disabled={actualizando}>Cancelar viaje</BotonOperacion>}
+              {v.estado === 'EN_CURSO' && <BotonOperacion compacto onClick={() => abrirAccion('FINALIZADO', v)} disabled={actualizando}>Finalizar viaje</BotonOperacion>}
               {['FINALIZADO', 'CANCELADO'].includes(v.estado) && <span aria-label="Sin acciones">—</span>}
             </div>
           </td>
-        </tr>)}</tbody>
-      </table></div> : <p className="empty-state" role="status">{viajes.length === 0 ? 'Todavía no hay viajes programados.' : 'No hay viajes que coincidan con la búsqueda.'}</p>}
-    </article>
+        </tr>)}
+      </TablaOperacion> : <VacioOperacion icono={viajes.length === 0 ? 'viajes' : undefined}>{viajes.length === 0 ? 'Todavía no hay viajes programados.' : 'No hay viajes que coincidan con la búsqueda.'}</VacioOperacion>}
+    </PanelOperacion>
     <Dialogo abierto={abierto} titulo="Programar viaje" cerrar={() => setAbierto(false)} ocupado={ocupado || revisando}>
       {abierto && <form onSubmit={guardar} onChange={corregir} aria-busy={ocupado || revisando}>
         <fieldset disabled={ocupado || revisando}>
