@@ -86,6 +86,34 @@ try {
   assert.equal(catalogos.pruebas_navegador, true, 'Inicia Laravel con DEMO_E2E=true y DEMO_DATA_PATH apuntando a una carpeta de pruebas antes de ejecutar este recorrido.');
   const baseResumen = await (await contexto.request.get(`${origen}/api/resumen`)).json();
   comprobar('Login y resumen funcionan', await pagina.locator('.metric').count()===4);
+  const proximaSalida = pagina.getByRole('region', { name:'Próxima salida' });
+  const [primero] = baseResumen.viajes;
+  comprobar('El resumen muestra la ruta, fecha, hora y placa de la próxima salida',
+    await proximaSalida.getByText(primero.ruta.replace(' - ', ' → '), { exact:true }).isVisible() &&
+    await proximaSalida.locator('time').getAttribute('datetime') === primero.salida_iso &&
+    await proximaSalida.getByText(primero.placa, { exact:true }).isVisible());
+  const estadosResumen = pagina.getByRole('region', { name:'Estado de los vehículos' });
+  for (const estado of baseResumen.estados) {
+    const fila = estadosResumen.getByRole('listitem').filter({ hasText:estado.nombre });
+    const ancho = await fila.locator('.resumen-estado-barra span').evaluate(barra => parseFloat(barra.style.width));
+    comprobar(`El estado ${estado.nombre} muestra el total y su proporción`,
+      await fila.getByText(String(estado.cantidad), { exact:true }).isVisible() &&
+      Math.abs(ancho - estado.cantidad / baseResumen.indicadores[0].valor * 100) < 0.01);
+  }
+  await pagina.screenshot({ path:resolve(capturas, 'resumen-escritorio.png'), fullPage:true });
+  for (const width of [320, 390, 768]) {
+    await pagina.setViewportSize({ width, height:844 });
+    const viaje = pagina.locator('.resumen-viajes tbody tr').first();
+    comprobar(`El resumen a ${width} px muestra los datos del viaje sin desbordamiento`,
+      await pagina.evaluate(() => document.documentElement.scrollWidth === document.documentElement.clientWidth) &&
+      await viaje.getByText(primero.ruta.replace(' - ', ' → '), { exact:true }).isVisible() &&
+      await viaje.getByText(primero.conductor, { exact:true }).isVisible() &&
+      await viaje.getByText(primero.salida, { exact:true }).isVisible() &&
+      await viaje.getByText(primero.placa, { exact:true }).isVisible() &&
+      await viaje.getByText(primero.estado, { exact:true }).isVisible());
+    if (width === 390) await pagina.screenshot({ path:resolve(capturas, 'resumen-movil.png'), fullPage:true });
+  }
+  await pagina.setViewportSize({ width:1440, height:850 });
   await pagina.getByRole('link', { name: 'Vehículos', exact: true }).click();
   await pagina.waitForURL('**/vehiculos');
   await pagina.getByRole('heading', { name: 'Inventario de vehículos' }).waitFor();

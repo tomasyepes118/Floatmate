@@ -303,37 +303,6 @@ main {
   color: #777;
   background: #f8f8f8;
 }
-.state-row {
-  margin-top: 25px;
-  font-size: 13px;
-}
-.state-row > div:first-child {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-.progress {
-  height: 5px;
-  background: #eef0f2;
-}
-.progress-bar {
-  background: #777e87;
-}
-.quick-panel {
-  border-top: 1px solid var(--border);
-  padding: 22px 0;
-}
-.quick-panel h2 {
-  font-size: 15px;
-}
-.quick-panel p {
-  font-size: 14px;
-  color: var(--muted);
-  margin: 12px 0 18px;
-}
-.quick-panel .btn {
-  width: 100%;
-}
 footer {
   padding: 22px 36px;
   color: #969aa0;
@@ -790,16 +759,12 @@ code {
     display: block;
     text-align: left;
   }
-  .quick-panel {
-    padding-bottom: 0;
-  }
 }
 
 /* Controles de esta entrega: se conserva la composición del mockup. */
 .sidebar nav button { display:block; width:100%; text-align:left; padding:10px 12px; margin:3px 0; color:#656a71; border:0; background:transparent; border-radius:6px; font-size:14px; }
 .sidebar nav button:disabled, .text-action:disabled { cursor:not-allowed; }
 .text-action { background:transparent; border:0; padding:0; font-size:13px; color:var(--ink); font-weight:500; }
-.quick-panel .btn:disabled { opacity:1; color:var(--ink); background:white; border-color:var(--border); cursor:not-allowed; }
 .sidebar-bottom .salir { background:transparent; border:0; padding:0; margin-top:9px; width:100%; font-size:13px; color:#646b74; text-decoration:underline; text-align:left; }
 .service-error { max-width:640px; padding:80px 24px; }
 .service-error p { color:var(--muted); margin:18px 0; }
@@ -850,9 +815,6 @@ code {
 .module-nav { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
 .module-nav button[aria-pressed=true] { background:#23262b; color:white; }
 .record-detail { white-space:pre-wrap; overflow-wrap:anywhere; max-width:40ch; }
-.activity-totals div { display:flex; justify-content:space-between; gap:12px; margin:8px 0; }
-.activity-totals dd { margin:0; text-align:right; }
-.activity-totals dt { font-weight:400; }
 .topbar-actions { display:flex; align-items:center; gap:14px; flex-wrap:wrap; justify-content:flex-end; }
 .topbar-actions a { font-weight:600; white-space:nowrap; text-decoration:underline; text-underline-offset:3px; }
 .tour-layout { display:grid; grid-template-columns:minmax(210px, 260px) minmax(0, 1fr); align-items:start; gap:20px; }

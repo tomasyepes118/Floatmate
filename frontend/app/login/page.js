@@ -1,17 +1,10 @@
 import { redirect } from 'next/navigation';
-import localFont from 'next/font/local';
+import { inter } from '../tipografia';
 import { consultarServidor } from '../../lib/servidor';
 import FormularioAcceso from '../../components/FormularioAcceso';
 import Marca from '../../components/Marca';
 
 export const dynamic = 'force-dynamic';
-
-const inter = localFont({
-  src: './fonts/InterVariable.woff2',
-  weight: '400 800',
-  display: 'swap',
-  fallback: ['system-ui', 'sans-serif'],
-});
 
 export default async function Login() {
   const sesion = await consultarServidor('sesion');
