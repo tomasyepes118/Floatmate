@@ -63,6 +63,14 @@ Para mostrar la revisión antes del despacho, abre **Programar viaje** en una co
 - [Guion, pasos de la demostración y preguntas del jurado](docs/pitch/Guion-Pitch-FloatMate.md)
 - [Resultados de las pruebas](docs/VALIDACION.md)
 
+## Demostración en la nube
+
+[Configurar FloatMate en Render](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2Ftomasyepes118%2FFloatmate)
+
+El Blueprint inicia Next.js y Laravel juntos y crea el escenario ficticio del pitch. Inicia sesión en Render, crea el servicio gratuito y asigna una contraseña de ensayo de 12 a 72 bytes en `FLOATMATE_DEMO_PASSWORD`. Comparte la URL `.onrender.com` y el acceso `admin` con el equipo.
+
+El plan gratuito suspende el servicio si está inactivo y lo reactiva al recibir otra visita. El primer acceso puede tardar alrededor de un minuto. Los registros de ensayo se reinician cuando Render vuelve a iniciar el contenedor. Para mantener datos entre reinicios se necesita almacenamiento persistente.
+
 ## Datos, cuentas y pruebas
 
 - Al programar, **Revisar elegibilidad** explica problemas de capacidad, disponibilidad, licencia, horario y kilometraje. Si hay un bus compatible con la ruta y el conductor seleccionados, puedes elegirlo desde el resultado. La revisión no reserva recursos y Laravel vuelve a comprobar las reglas al confirmar.

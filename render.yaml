@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: floatmate-demo
+    runtime: docker
+    plan: free
+    autoDeployTrigger: off
+    healthCheckPath: /login
+    envVars:
+      - key: FLOATMATE_APP_SECRET
+        generateValue: true
+      - key: FLOATMATE_DEMO_PASSWORD
+        sync: false

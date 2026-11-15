@@ -1,0 +1,14 @@
+.git
+.github
+docs
+**/node_modules
+**/vendor
+**/.next
+**/.env
+**/.env.*
+**/test-results
+backend/storage/app/demo
+backend/storage/app/ensayos
+backend/storage/logs/*.log
+backend/storage/framework/sessions/*
+backend/bootstrap/cache/*.php
