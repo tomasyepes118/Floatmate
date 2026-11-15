@@ -103,6 +103,10 @@
 .operacion :is(.form-control, .form-select)[aria-invalid=true] { border-color: #aa2834; }
 .operacion main :is(a, button):focus-visible { outline-color: #608632; }
 .operacion .operation-dialog { border-radius: 15px; }
+.referencia-acpm { margin-bottom: 16px; padding: 12px; background: #eff5e8; border: 1px solid var(--panel-borde); border-radius: 8px; font-size: 13px; }
+.referencia-acpm p { margin: 0; }
+.referencia-acpm p + p { margin-top: 4px; }
+.referencia-acpm .btn { margin-top: 9px; padding: 6px 10px; font-size: 12px; }
 
 .operacion .module-nav { display: flex; flex-wrap: wrap; gap: 0 5px; padding: 0; border-bottom: 1px solid var(--panel-borde); }
 .operacion .module-nav button {
