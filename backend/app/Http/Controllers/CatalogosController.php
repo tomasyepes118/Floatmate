@@ -16,23 +16,21 @@ class CatalogosController extends Controller
 
     public function index(Request $request, RepositorioDemo $repositorio, MunicipiosAntioquia $municipios): JsonResponse
     {
-        return response()->json(['usuario'=>$request->session()->get('usuario_demo'), 'municipios'=>$municipios->todos()]
-            + array_intersect_key($repositorio->leer(), array_flip(self::TIPOS)));
+        $flota = $repositorio->leer();
+        return response()->json(['usuario'=>$request->session()->get('usuario_demo'), 'municipios'=>$municipios->todos(),
+            'siguiente_codigo_ruta'=>$this->siguienteCodigoRuta($flota['rutas'])]
+            + array_intersect_key($flota, array_flip(self::TIPOS)));
     }
 
     public function guardar(Request $request, RepositorioDemo $repositorio, MunicipiosAntioquia $municipios, string $tipo, ?int $id = null): JsonResponse
     {
         $entrada = $request->all();
-        foreach (['codigo', 'nombre', 'origen', 'destino'] as $campo) {
+        foreach (['nombre', 'origen', 'destino'] as $campo) {
             if (is_string($entrada[$campo] ?? null)) {
                 $entrada[$campo] = trim($entrada[$campo]);
             }
         }
-        if (is_string($entrada['codigo'] ?? null)) {
-            $entrada['codigo'] = strtoupper($entrada['codigo']);
-        }
         $reglas = $tipo === 'rutas' ? [
-            'codigo'=>['required','string','max:15','regex:/^[A-Z0-9-]+$/'],
             'origen'=>['required','string','max:60'],
             'destino'=>['required','string','max:60','different:origen'],
             'distancia'=>['required','numeric','decimal:0,2','gt:0','max:5000'],
@@ -51,7 +49,6 @@ class CatalogosController extends Controller
             'max'=>'Revisa la longitud o el valor del campo.',
             'integer'=>'Escribe un número entero.',
             'numeric'=>'Escribe un número válido.',
-            'regex'=>'Usa letras, números o guiones.',
             'different'=>'El destino debe ser distinto del origen.',
             'gt'=>'El valor debe ser mayor que cero.',
             'decimal'=>'Usa como máximo dos decimales.',
@@ -75,15 +72,11 @@ class CatalogosController extends Controller
         $nombres = $tipo === 'rutas' ? array_column($municipios->todos(), 'nombre') : [];
         $item = $repositorio->modificar(function (array &$flota) use ($tipo, $id, $datos, $revision, $nombres): array {
             $items = &$flota[$tipo];
-            if ($tipo === 'rutas') {
-                foreach ($items as $ruta) {
-                    if ($ruta['id'] !== $id && $ruta['codigo'] === $datos['codigo']) {
-                        throw ValidationException::withMessages(['codigo'=>'Este código de ruta ya existe.']);
-                    }
-                }
-            }
             if ($id === null) {
-                if ($tipo === 'rutas') $this->validarMunicipios($datos, $nombres);
+                if ($tipo === 'rutas') {
+                    $this->validarMunicipios($datos, $nombres);
+                    $datos['codigo'] = $this->siguienteCodigoRuta($items);
+                }
                 $item = ['id'=>max([0, ...array_column($items, 'id')]) + 1, 'revision'=>0] + $datos;
                 $items[] = $item;
                 return $item;
@@ -118,6 +111,16 @@ class CatalogosController extends Controller
         });
 
         return response()->json(['message'=>'Registro guardado.', 'item'=>$item], $id === null ? 201 : 200);
+    }
+
+    private function siguienteCodigoRuta(array $rutas): string
+    {
+        $ultimo = 0;
+        foreach ($rutas as $ruta) {
+            $codigo = (string) $ruta['codigo'];
+            if (ctype_digit($codigo)) $ultimo = max($ultimo, (int) $codigo);
+        }
+        return str_pad((string) ($ultimo + 1), 4, '0', STR_PAD_LEFT);
     }
 
     private function validarMunicipios(array $datos, array $nombres, array $actual = []): void

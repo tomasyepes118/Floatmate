@@ -27,7 +27,6 @@ const modulos = {
     columnas:['Código','Recorrido','Distancia','Duración','Estado'],
     fila:ruta => [ruta.codigo, `${ruta.origen} – ${ruta.destino}`, `${numero(ruta.distancia)} km`, `${ruta.duracion} min`, ruta.activa ? 'Activa' : 'Inactiva'],
     campos:[
-      { id:'codigo', etiqueta:'Código de ruta', maxLength:15, pattern:'[A-Za-z0-9\\-]+' },
       { id:'origen', etiqueta:'Origen', opciones:municipios }, { id:'destino', etiqueta:'Destino', opciones:municipios },
       distancia, { id:'duracion', etiqueta:'Duración en minutos', tipo:'number', min:1, max:4320 },
       { id:'activa', etiqueta:'Estado', opciones:() => [['1','Activa'],['0','Inactiva']], valor:ruta => ruta.activa === false ? '0' : '1' },
@@ -102,21 +101,23 @@ export default function GestionOperativa({ seccion, tipoInicial, datos }) {
     setFormulario(item);
   }
 
-  async function calcular(evento) {
-    const campos = evento.currentTarget.form.elements;
+  async function calcular(campos) {
     const codigo = campo => datos.municipios.find(municipio => municipio.nombre === campos[campo].value)?.codigo;
     const origen = codigo('origen');
     const destino = codigo('destino');
-    setError('');
-    setErrores({});
-    setEstimacion('');
-    if (!origen || !destino || origen === destino) {
+    if (!origen || !destino) return;
+    if (origen === destino) {
       setError('Selecciona dos municipios distintos de Antioquia.');
       return;
     }
     setCalculando(true);
     try {
-      const resultado = await enviarAccion('catalogos/rutas/estimar', { origen, destino });
+      const consultar = () => enviarAccion('catalogos/rutas/estimar', { origen, destino });
+      const resultado = await consultar().catch(async fallo => {
+        if (fallo.estado !== 503 || !(fallo.reintentarEn > 0 && fallo.reintentarEn <= 2)) throw fallo;
+        await new Promise(resolve => setTimeout(resolve, fallo.reintentarEn * 1000));
+        return consultar();
+      });
       campos.distancia.value = resultado.distancia;
       campos.duracion.value = resultado.duracion;
       setEstimacion(`Estimación por carretera · ${numero(resultado.distancia)} km · ${resultado.duracion} min`);
@@ -135,6 +136,7 @@ export default function GestionOperativa({ seccion, tipoInicial, datos }) {
       form.elements.duracion.value = '';
       setError('');
       setErrores({});
+      void calcular(form.elements);
     }
     if (['origen', 'destino', 'distancia', 'duracion'].includes(name)) setEstimacion('');
   }
@@ -201,6 +203,10 @@ export default function GestionOperativa({ seccion, tipoInicial, datos }) {
           {editando && <input type="hidden" name="revision" value={formulario.revision ?? 0} />}
           {tipo === 'conductores' && formulario.estado === 'EN_VIAJE' && <p className="operation-hint">El conductor conserva el estado En viaje hasta que se registre la llegada.</p>}
           <div className="operation-grid">
+            {tipo === 'rutas' && <Campo nombre="codigo-ruta" etiqueta="Código de ruta">
+              <input id="codigo-ruta" className="form-control" readOnly value={formulario.codigo ?? datos.siguiente_codigo_ruta} />
+              {!editando && <small>Se confirma al guardar.</small>}
+            </Campo>}
             {modulo.campos.map(({ id, etiqueta, tipo:control = 'text', opciones:lista, valor, inicial, max, ...limites }) => {
               const atributos = {
                 id, name:id, required:true,
@@ -219,7 +225,7 @@ export default function GestionOperativa({ seccion, tipoInicial, datos }) {
             })}
           </div>
           {tipo === 'rutas' && <>
-            <button type="button" className="btn btn-light" onClick={calcular}>{calculando ? 'Calculando…' : 'Calcular distancia y tiempo'}</button>
+            {calculando && <p className="operation-hint" role="status">Consultando el recorrido por carretera…</p>}
             {estimacion && <p className="operation-success" role="status">{estimacion}</p>}
             <p className="operation-hint">Usa puntos de referencia municipales. El tiempo es estimado y puede variar por tráfico y paradas. Puedes ajustar los valores antes de guardar.</p>
             <p className="operation-hint">Cálculo de OSRM · <a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a> · <a href="https://www.openstreetmap.org/fixthemap">Corregir el mapa</a></p>

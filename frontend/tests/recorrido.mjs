@@ -220,17 +220,24 @@ try {
     }
   }
   const guardarRegistro = () => dialogo.getByRole('button', { name:'Guardar', exact:true }).click();
+  const codigoRuta = dialogo.getByLabel('Código de ruta', { exact:true });
+  comprobar('El código de ruta se muestra automáticamente y es de solo lectura',
+    await codigoRuta.inputValue() === '0001' && !await codigoRuta.isEditable());
+  let consultasRuta = 0;
+  await pagina.route('**/api/catalogos/rutas/estimar', ruta => {
+    consultasRuta++;
+    if (consultasRuta === 1) return ruta.fulfill({ status:503, headers:{'Retry-After':'2'}, json:{message:'Servicio ocupado'} });
+    return ruta.fulfill({ json:{distancia:27.5, duracion:55} });
+  });
   await dialogo.getByLabel('Origen', { exact:true }).selectOption('Bello');
   await dialogo.getByLabel('Destino', { exact:true }).selectOption('Envigado');
-  await pagina.route('**/api/catalogos/rutas/estimar', ruta => ruta.fulfill({json:{distancia:27.5, duracion:55}}));
-  await dialogo.getByRole('button', { name:'Calcular distancia y tiempo' }).click();
   await dialogo.getByText('Estimación por carretera', {exact:false}).waitFor();
-  comprobar('El cálculo completa los campos de distancia y duración',
+  comprobar('El cálculo completa los campos de distancia y duración al seleccionar los municipios',
     await dialogo.getByLabel('Distancia en km').inputValue() === '27.5' &&
     await dialogo.getByLabel('Duración en minutos').inputValue() === '55');
-  await llenar({ 'Código de ruta':'FINAL-01' });
+  comprobar('El formulario reintenta automáticamente cuando el servicio está ocupado', consultasRuta === 2);
   await guardarRegistro();
-  const rutaFinal = pagina.getByRole('row').filter({ hasText:'FINAL-01' });
+  const rutaFinal = pagina.getByRole('row').filter({ has:pagina.getByRole('cell', { name:'0001', exact:true }) });
   await rutaFinal.getByText('Bello – Envigado').waitFor();
   comprobar('Una ruta nueva queda visible en catálogos', await rutaFinal.isVisible());
   await foto(pagina, '17-catalogos-pc.png');

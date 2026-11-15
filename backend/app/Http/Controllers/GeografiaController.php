@@ -37,7 +37,7 @@ class GeografiaController extends Controller
             return response()->json($estimacion);
         }
         if (!Cache::add('osrm:intervalo', true, 2)) {
-            return response()->json(['message'=>'Espera unos segundos y vuelve a calcular.'], 503);
+            return response()->json(['message'=>'El servicio de mapas está ocupado. Puedes ingresar la distancia y duración manualmente.'], 503, ['Retry-After'=>'2']);
         }
 
         $origen = $municipios[$datos['origen']];
