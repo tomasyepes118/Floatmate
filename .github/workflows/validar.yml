@@ -32,7 +32,7 @@ jobs:
           curl --retry 15 --retry-all-errors --retry-delay 2 -fsS "$base/login" >/tmp/floatmate-login.html
           grep -q 'Iniciar sesión' /tmp/floatmate-login.html
           if grep -q 'floatmate123' /tmp/floatmate-login.html; then exit 1; fi
-          token=$(curl --retry 5 --retry-all-errors -fsS -c /tmp/floatmate-cookies "$base/api/csrf" | jq -er .token)
+          token=$(curl --retry 10 --retry-all-errors --retry-delay 2 -fsS -c /tmp/floatmate-cookies "$base/api/csrf" | jq -er .token)
           curl -fsS -b /tmp/floatmate-cookies -c /tmp/floatmate-cookies \
             -H "X-CSRF-TOKEN: $token" -H 'Content-Type: application/json' \
             -d '{"usuario":"admin","clave":"prueba-contenedor"}' "$base/api/login"
