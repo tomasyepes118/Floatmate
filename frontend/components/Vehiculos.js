@@ -4,9 +4,16 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Dialogo from './Dialogo';
 import Campo from './Campo';
+import IconoOperacion from './IconoOperacion';
 import { enviarAccion } from '../lib/api';
 import { estadosVehiculo, tiposVehiculo, normalizar, numero } from '../lib/presentacion';
-import { BotonOperacion, BuscarOperacion, EstadoOperacion, FiltroEstado, PanelOperacion, TablaOperacion, TituloPagina, VacioOperacion } from './InterfazOperacion';
+import { BotonOperacion, BuscarOperacion, EstadoOperacion, FiltroEstado, PanelOperacion, TituloPagina, VacioOperacion } from './InterfazOperacion';
+
+const fotos = {
+  BUS_URBANO: '/images/vehiculos/urbano.webp',
+  BUS_INTERMUNICIPAL: '/images/vehiculos/intermunicipal.webp',
+  MICROBUS: '/images/vehiculos/microbus.webp',
+};
 
 export default function Vehiculos({ iniciales, puedeEditar }) {
   const router = useRouter();
@@ -59,17 +66,29 @@ export default function Vehiculos({ iniciales, puedeEditar }) {
       <FiltroEstado id="estado-vehiculo" etiqueta="Filtrar vehículos por estado" opciones={estadosVehiculo} value={estado} onChange={e => setEstado(e.target.value)} />
       {puedeEditar && <BotonOperacion principal icono="agregar" onClick={() => abrir()} disabled={actualizando}>Registrar vehículo</BotonOperacion>}
     </div>
-    <PanelOperacion id="inventario-vehiculos" titulo="Inventario de vehículos" contador={`${lista.length} ${lista.length === 1 ? 'vehículo' : 'vehículos'}`}>
-      {lista.length ? <TablaOperacion etiqueta="inventario-vehiculos" columnas={['Placa', 'Modelo', 'Capacidad', 'Kilometraje', 'Estado', ...(puedeEditar ? ['Acciones'] : [])]}>
-        {lista.map(v => <tr key={v.id}>
-          <td data-label="Placa"><strong>{v.placa}</strong><small>{v.codigo}</small></td>
-          <td data-label="Modelo"><div>{v.marca} {v.modelo}<small>{tiposVehiculo[v.tipo]}</small></div></td>
-          <td data-label="Capacidad">{v.capacidad} pasajeros</td>
-          <td data-label="Kilometraje">{numero(v.kilometraje)} km</td>
-          <td data-label="Estado"><EstadoOperacion estado={v.estado}>{estadosVehiculo[v.estado]}</EstadoOperacion></td>
-          {puedeEditar && <td data-label="Acciones"><BotonOperacion compacto onClick={() => abrir(v)} disabled={actualizando}>Editar</BotonOperacion></td>}
-        </tr>)}
-      </TablaOperacion> : <VacioOperacion icono={iniciales.length === 0 ? 'vehiculos' : undefined}>{iniciales.length === 0
+    <PanelOperacion id="inventario-vehiculos" titulo="Inventario de vehículos" className="inventario-vehiculos" contador={`${lista.length} ${lista.length === 1 ? 'vehículo' : 'vehículos'}`}>
+      {lista.length ? <div className="vehiculos-cuadricula">
+        {lista.map(v => <article className="vehiculo-tarjeta" key={v.id} aria-labelledby={`vehiculo-${v.id}`}>
+          <div className="vehiculo-imagen">
+            {fotos[v.tipo] ? <img src={fotos[v.tipo]} alt="" loading="lazy" decoding="async" /> : <IconoOperacion nombre="vehiculos" />}
+          </div>
+          <div className="vehiculo-identidad">
+            <div className="vehiculo-encabezado">
+              <h3 id={`vehiculo-${v.id}`}>{v.placa}</h3>
+              <EstadoOperacion estado={v.estado}>{estadosVehiculo[v.estado]}</EstadoOperacion>
+            </div>
+            <p className="vehiculo-modelo">{v.marca} {v.modelo}</p>
+            <p className="vehiculo-tipo">{tiposVehiculo[v.tipo] ?? 'Tipo sin especificar'} · {v.codigo}</p>
+          </div>
+          <div className="vehiculo-pie">
+            <dl>
+              <div><dt className="visually-hidden">Capacidad</dt><dd><IconoOperacion nombre="accesos" />{v.capacidad} pasajeros</dd></div>
+              <div><dt className="visually-hidden">Kilometraje</dt><dd><IconoOperacion nombre="kilometraje" />{numero(v.kilometraje)} km</dd></div>
+            </dl>
+            {puedeEditar && <BotonOperacion compacto onClick={() => abrir(v)} disabled={actualizando}>Editar</BotonOperacion>}
+          </div>
+        </article>)}
+      </div> : <VacioOperacion icono={iniciales.length === 0 ? 'vehiculos' : undefined}>{iniciales.length === 0
         ? (puedeEditar ? 'Todavía no hay vehículos. Pulsa Registrar vehículo para agregar el primero.' : 'Todavía no hay vehículos registrados.')
         : 'No hay vehículos que coincidan con la búsqueda.'}</VacioOperacion>}
     </PanelOperacion>

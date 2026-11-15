@@ -3,6 +3,7 @@ import { consultarServidor } from '../../lib/servidor';
 import MarcoAplicacion from '../../components/MarcoAplicacion';
 import ServicioNoDisponible from '../../components/ServicioNoDisponible';
 import Vehiculos from '../../components/Vehiculos';
+import './vehiculos.css';
 
 export const dynamic = 'force-dynamic';
 export default async function PaginaVehiculos() {

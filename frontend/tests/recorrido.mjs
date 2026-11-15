@@ -117,17 +117,35 @@ try {
   await pagina.getByRole('link', { name: 'Vehículos', exact: true }).click();
   await pagina.waitForURL('**/vehiculos');
   await pagina.getByRole('heading', { name: 'Inventario de vehículos' }).waitFor();
-  comprobar('La consulta muestra los vehículos guardados', await pagina.locator('tbody tr').count()===catalogos.vehiculos.length);
+  const tarjetas = pagina.getByRole('region', { name:'Inventario de vehículos' }).getByRole('article');
+  comprobar('La consulta muestra los vehículos guardados', await tarjetas.count()===catalogos.vehiculos.length);
+  const fotosVehiculo = { BUS_URBANO:'urbano.webp', BUS_INTERMUNICIPAL:'intermunicipal.webp', MICROBUS:'microbus.webp' };
+  for (const bus of catalogos.vehiculos) {
+    const fotoBus = tarjetas.filter({ has:pagina.getByRole('heading', { name:bus.placa, exact:true }) }).locator('img');
+    comprobar(`La tarjeta ${bus.placa} usa el WebP de su tipo`, (await fotoBus.getAttribute('src')).endsWith(`/${fotosVehiculo[bus.tipo]}`));
+  }
+  await pagina.waitForFunction(() => [...document.querySelectorAll('.vehiculo-imagen img')].every(imagen => imagen.naturalWidth > 0));
   await foto(pagina, '01-vehiculos-pc.png');
+  for (const [width, columnas] of [[1440, 3], [768, 2], [390, 1], [320, 1]]) {
+    await pagina.setViewportSize({ width, height:850 });
+    comprobar(`El inventario usa ${columnas} columnas a ${width} px sin desbordamiento`,
+      await pagina.locator('.vehiculos-cuadricula').evaluate((cuadricula, cantidad) =>
+        getComputedStyle(cuadricula).gridTemplateColumns.split(' ').length === cantidad &&
+        document.documentElement.scrollWidth === document.documentElement.clientWidth &&
+        [...cuadricula.querySelectorAll('img')].every(imagen => getComputedStyle(imagen).objectFit === 'contain'), columnas));
+    if (width === 768) await foto(pagina, 'vehiculos-tablet.png');
+    if (width === 390) await foto(pagina, 'vehiculos-tarjetas-movil.png');
+  }
+  await pagina.setViewportSize({ width:1440, height:850 });
   await pagina.getByLabel('Filtrar vehículos por estado').selectOption('MANTENIMIENTO');
-  comprobar('El filtro de estado de vehículos funciona', await pagina.locator('tbody tr').count()===catalogos.vehiculos.filter(v=>v.estado==='MANTENIMIENTO').length);
+  comprobar('El filtro de estado de vehículos funciona', await tarjetas.count()===catalogos.vehiculos.filter(v=>v.estado==='MANTENIMIENTO').length);
   await pagina.getByLabel('Filtrar vehículos por estado').selectOption('');
   await pagina.getByLabel('Buscar vehículo', { exact: true }).fill('no-existe');
   comprobar('La búsqueda vacía tiene un mensaje claro', await pagina.getByText('No hay vehículos que coincidan con la búsqueda.').isVisible());
   await pagina.getByLabel('Buscar vehículo', { exact: true }).fill('');
   await pagina.getByRole('button', { name: 'Registrar vehículo', exact: true }).click();
   await pagina.getByRole('button', { name: 'Cerrar', exact: true }).click();
-  comprobar('Cerrar el formulario no crea registros', await pagina.locator('tbody tr').count()===catalogos.vehiculos.length);
+  comprobar('Cerrar el formulario no crea registros', await tarjetas.count()===catalogos.vehiculos.length);
   await pagina.getByRole('button', { name: 'Registrar vehículo', exact: true }).click();
   let n=200;
   while(catalogos.vehiculos.some(v=>v.placa===`PRU${n}`||v.codigo===`AVANCE3-${n}`)) n++;
@@ -135,6 +153,7 @@ try {
   for (const [campo,valor] of [['Placa','TPQ482'],['Código interno',codigo],['Marca y línea','Chevrolet NPR'],['Modelo','2026'],['Capacidad de pasajeros','30'],['Kilometraje actual','1000'],['Próximo mantenimiento en km','10000']]) {
     await pagina.getByLabel(campo,{exact:true}).fill(valor);
   }
+  await pagina.getByLabel('Tipo', { exact:true }).selectOption('MICROBUS');
   await pagina.getByRole('button',{name:'Guardar vehículo',exact:true}).click();
   await pagina.locator('.form-error').filter({hasText:'La placa ya está registrada.'}).waitFor();
   comprobar('La placa repetida se rechaza desde Laravel', (await contexto.request.get(`${origen}/api/vehiculos`).then(r=>r.json())).vehiculos.length===catalogos.vehiculos.length);
@@ -144,11 +163,13 @@ try {
   await foto(pagina,'03-registrar-vehiculo-pc.png');
   await pagina.getByRole('button',{name:'Guardar vehículo',exact:true}).click();
   await pagina.getByText('Vehículo registrado correctamente.',{exact:true}).waitFor();
-  await pagina.locator('tbody tr').filter({hasText:placa}).waitFor();
-  comprobar('Se registra el vehículo y aparece en la tabla', await pagina.locator('tbody tr').filter({hasText:placa}).count()===1);
+  const tarjetaBus = pagina.getByRole('article', { name:placa, exact:true });
+  await tarjetaBus.waitFor();
+  comprobar('El vehículo registrado aparece en su tarjeta con el WebP de microbús',
+    await tarjetaBus.count() === 1 && (await tarjetaBus.locator('img').getAttribute('src')).endsWith('/microbus.webp'));
   await pagina.reload();
   await pagina.getByRole('heading',{name:'Inventario de vehículos'}).waitFor();
-  comprobar('El registro se conserva al recargar', await pagina.locator('tbody tr').filter({hasText:placa}).count()===1);
+  comprobar('El registro se conserva al recargar', await tarjetaBus.count()===1);
   await pagina.getByRole('link',{name:'Resumen',exact:true}).click();
   await pagina.getByRole('heading',{name:'Resumen de la flota'}).waitFor();
   comprobar('El resumen refleja el vehículo nuevo', (await pagina.locator('.metric strong').allTextContents())[0]===String(baseResumen.indicadores[0].valor+1));
@@ -268,17 +289,19 @@ try {
   comprobar('El viaje cancelado conserva el ticket en el historial', await rechazado.getByText(`Ticket RECH-${placa}`, { exact: false }).isVisible());
 
   await pagina.getByRole('link', { name: 'Vehículos', exact: true }).click();
-  const filaBus = pagina.locator('tbody tr').filter({ hasText: placa });
-  await filaBus.getByRole('button', { name: 'Editar', exact: true }).click();
+  await tarjetaBus.getByRole('button', { name: 'Editar', exact: true }).click();
   comprobar('La edición carga el kilometraje de llegada', await pagina.getByLabel('Kilometraje actual').inputValue() === '1042');
   await pagina.getByLabel('Marca y línea').fill('Chevrolet NPR revisado');
+  await pagina.getByLabel('Tipo', { exact:true }).selectOption('BUS_INTERMUNICIPAL');
   await pagina.getByRole('dialog').getByLabel('Estado', { exact: true }).selectOption('FUERA_SERVICIO');
   await pagina.getByRole('dialog').screenshot({ path: resolve(capturas, '14-editar-vehiculo-pc.png') });
   await pagina.getByRole('button', { name: 'Guardar cambios' }).click();
-  await filaBus.getByText('Fuera de servicio', { exact: true }).waitFor();
+  await tarjetaBus.getByText('Fuera de servicio', { exact: true }).waitFor();
   await pagina.reload();
-  await filaBus.getByText('Fuera de servicio', { exact: true }).waitFor();
-  comprobar('El vehículo retirado conserva su edición al recargar', await filaBus.getByText('Chevrolet NPR revisado', { exact: false }).isVisible());
+  await tarjetaBus.getByText('Fuera de servicio', { exact: true }).waitFor();
+  comprobar('El vehículo retirado conserva su edición y la foto del tipo nuevo al recargar',
+    await tarjetaBus.getByText('Chevrolet NPR revisado', { exact:false }).isVisible() &&
+    (await tarjetaBus.locator('img').getAttribute('src')).endsWith('/intermunicipal.webp'));
   await foto(pagina, '15-vehiculo-retirado-pc.png');
 
   await pagina.getByRole('link', { name:'Catálogos' }).click();
