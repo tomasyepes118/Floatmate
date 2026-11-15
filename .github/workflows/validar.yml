@@ -15,6 +15,30 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  contenedor:
+    name: Probar el contenedor de demostración
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: docker build -t floatmate-demo .
+      - name: Verificar sesión y viajes preparados
+        run: |
+          docker run -d --name floatmate-demo -p 127.0.0.1:10000:10000 \
+            -e FLOATMATE_APP_SECRET="$(openssl rand -base64 32)" \
+            -e FLOATMATE_DEMO_PASSWORD=prueba-contenedor \
+            -e SESSION_SECURE_COOKIE=false floatmate-demo
+          trap 'docker logs floatmate-demo' EXIT
+          base=http://127.0.0.1:10000
+          curl --retry 15 --retry-all-errors --retry-delay 2 -fsS "$base/login" >/tmp/floatmate-login.html
+          grep -q 'Iniciar sesión' /tmp/floatmate-login.html
+          if grep -q 'floatmate123' /tmp/floatmate-login.html; then exit 1; fi
+          token=$(curl --retry 10 --retry-all-errors --retry-delay 2 -fsS -c /tmp/floatmate-cookies "$base/api/csrf" | jq -er .token)
+          curl -fsS -b /tmp/floatmate-cookies -c /tmp/floatmate-cookies \
+            -H "X-CSRF-TOKEN: $token" -H 'Content-Type: application/json' \
+            -d '{"usuario":"admin","clave":"prueba-contenedor"}' "$base/api/login"
+          curl -fsS -b /tmp/floatmate-cookies "$base/api/viajes" | jq -e \
+            '. as $data | ([.viajes[] | select(.id == 9001 or .id == 9002) | select(.estado == "PROGRAMADO")] | length == 2) and any($data.vehiculos[]; .placa == "TPQ482" and .kilometraje == 34958)'
+
   frontend:
     name: Compilar Next.js
     runs-on: ubuntu-latest

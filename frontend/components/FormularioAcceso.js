@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { enviarAccion } from '../lib/api';
 import Marca from './Marca';
 
-export default function FormularioAcceso({ servicioDisponible }) {
+export default function FormularioAcceso({ servicioDisponible, mostrarCredenciales }) {
   const [visible, setVisible] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState(servicioDisponible ? '' : 'No pudimos conectar con el servicio. Revisa que Laravel esté iniciado.');
@@ -28,7 +28,7 @@ export default function FormularioAcceso({ servicioDisponible }) {
     <main className="login-layout">
       <section className="login-brand" aria-label="FloatMate"><Marca /></section>
       <section className="login-form-area">
-        <form className="login-card" onSubmit={ingresar} aria-busy={enviando}>
+        <form className="login-card" method="post" onSubmit={ingresar} aria-busy={enviando}>
           <h1>Iniciar sesión</h1>
           <p className="text-secondary mb-4">Ingresa para consultar tu flota.</p>
           <label htmlFor="usuario" className="form-label">Usuario</label>
@@ -42,7 +42,7 @@ export default function FormularioAcceso({ servicioDisponible }) {
           <button className="btn btn-primary w-100" type="submit" disabled={enviando}>{enviando ? 'Ingresando…' : 'Ingresar'}</button>
           <div className="demo-access">
             <strong>Acceso de demostración</strong>
-            <p>Usuario: <code>admin</code> · Contraseña: <code>floatmate123</code></p>
+            {mostrarCredenciales && <p>Usuario: <code>admin</code> · Contraseña: <code>floatmate123</code></p>}
             <small>Versión de demostración con datos de ejemplo.</small>
           </div>
         </form>
