@@ -5,5 +5,9 @@ export const normalizar = valor => String(valor).normalize('NFD').replace(/[\u03
 export const numero = valor => Number(valor).toLocaleString('es-CO');
 export const fecha = valor => new Date(valor.length === 16 ? `${valor}:00-05:00` : valor).toLocaleString('es-CO', { timeZone: 'America/Bogota', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
 export function claseEstado(estado) {
-  return estado==='DISPONIBLE' ? 'available' : estado==='MANTENIMIENTO' ? 'maintenance' : ['EN_RUTA','EN_CURSO','PROGRAMADO'].includes(estado) ? 'moving' : 'done';
+  if (['DISPONIBLE', 'ACTIVA'].includes(estado)) return 'available';
+  if (estado === 'MANTENIMIENTO') return 'maintenance';
+  if (estado === 'PROGRAMADO') return 'scheduled';
+  if (['EN_RUTA', 'EN_CURSO', 'EN_VIAJE'].includes(estado)) return 'moving';
+  return 'done';
 }

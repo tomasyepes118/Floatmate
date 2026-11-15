@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Campo from './Campo';
 import Dialogo from './Dialogo';
+import { BotonOperacion, BuscarOperacion, EstadoOperacion, PanelOperacion, TablaOperacion, TituloPagina, VacioOperacion } from './InterfazOperacion';
 import { enviarAccion } from '../lib/api';
 import { normalizar, numero } from '../lib/presentacion';
 
@@ -23,9 +24,10 @@ const municipios = datos => datos.municipios.map(municipio => [municipio.nombre,
 
 const modulos = {
   rutas: {
-    titulo:'Rutas', crear:'Registrar ruta',
+    titulo:'Rutas', crear:'Registrar ruta', vacio:'Sin rutas registradas', icono:'viajes',
     columnas:['Código','Recorrido','Distancia','Duración','Estado'],
-    fila:ruta => [ruta.codigo, `${ruta.origen} – ${ruta.destino}`, `${numero(ruta.distancia)} km`, `${ruta.duracion} min`, ruta.activa ? 'Activa' : 'Inactiva'],
+    fila:ruta => [ruta.codigo, `${ruta.origen} → ${ruta.destino}`, `${numero(ruta.distancia)} km`, `${ruta.duracion} min`, ruta.activa ? 'Activa' : 'Inactiva'],
+    estado:ruta => ruta.activa ? 'ACTIVA' : 'INACTIVA',
     campos:[
       { id:'origen', etiqueta:'Origen', opciones:municipios }, { id:'destino', etiqueta:'Destino', opciones:municipios },
       distancia, { id:'duracion', etiqueta:'Duración en minutos', tipo:'number', min:1, max:4320 },
@@ -33,9 +35,10 @@ const modulos = {
     ],
   },
   conductores: {
-    titulo:'Conductores', crear:'Registrar conductor',
+    titulo:'Conductores', crear:'Registrar conductor', vacio:'Sin conductores registrados', icono:'catalogos',
     columnas:['Nombre','Licencia vigente hasta','Estado'],
     fila:conductor => [conductor.nombre, conductor.licencia_vence, estadosConductor[conductor.estado]],
+    estado:conductor => conductor.estado,
     campos:[
       { id:'nombre', etiqueta:'Nombre completo', maxLength:80 },
       { id:'licencia_vence', etiqueta:'Vencimiento de la licencia', tipo:'date' },
@@ -43,7 +46,7 @@ const modulos = {
     ],
   },
   combustible: {
-    titulo:'Combustible', crear:'Registrar abastecimiento',
+    titulo:'Combustible', crear:'Registrar abastecimiento', vacio:'Sin abastecimientos registrados', icono:'combustible',
     columnas:['Fecha','Placa','Litros','Precio por litro','Total','Detalle'],
     fila:registro => [registro.fecha, registro.placa, numero(registro.litros), dinero(registro.precio_litro), dinero(registro.total), registro.detalle],
     campos:[vehiculo, fechaRegistro,
@@ -53,7 +56,7 @@ const modulos = {
     ],
   },
   mantenimientos: {
-    titulo:'Mantenimientos', crear:'Registrar mantenimiento',
+    titulo:'Mantenimientos', crear:'Registrar mantenimiento', vacio:'Sin mantenimientos registrados', icono:'mantenimiento',
     columnas:['Fecha','Placa','Kilometraje','Próximo servicio','Detalle'],
     fila:registro => [registro.fecha, registro.placa, `${numero(registro.kilometraje)} km`, `${numero(registro.proximo_mantenimiento)} km`, registro.detalle],
     campos:[vehiculo, fechaRegistro,
@@ -63,7 +66,7 @@ const modulos = {
     ],
   },
   incidentes: {
-    titulo:'Incidentes', crear:'Registrar incidente',
+    titulo:'Incidentes', crear:'Registrar incidente', vacio:'Sin incidentes registrados', icono:'incidente',
     columnas:['Fecha','Placa','Viaje','Gravedad','Detalle'],
     fila:registro => [registro.fecha, registro.placa, `V-${registro.viaje_id}`, gravedad[registro.gravedad], registro.detalle],
     campos:[
@@ -165,12 +168,10 @@ export default function GestionOperativa({ seccion, tipoInicial, datos }) {
   }
 
   return <>
-    <div className="page-title">
-      <h1>{esCatalogo ? 'Catálogos' : 'Registros de operación'}</h1>
-      <p>{esCatalogo ? 'Administra los recorridos y conductores que se usan al programar un viaje.' : 'Consulta los abastecimientos, servicios e incidentes de la flota.'}</p>
-    </div>
+    <TituloPagina titulo={esCatalogo ? 'Catálogos' : 'Registros de operación'}
+      descripcion={esCatalogo ? 'Administra los recorridos y conductores que se usan al programar un viaje.' : 'Consulta los abastecimientos, servicios e incidentes de la flota.'} />
     <nav className="module-nav" aria-label={esCatalogo ? 'Catálogos' : 'Tipos de registro'}>
-      {tipos.map(clave => <button type="button" key={clave} className="btn btn-light" aria-pressed={tipo === clave} onClick={() => {
+      {tipos.map(clave => <button type="button" key={clave} aria-pressed={tipo === clave} onClick={() => {
         setTipo(clave);
         setBusqueda('');
         setMensaje('');
@@ -178,25 +179,22 @@ export default function GestionOperativa({ seccion, tipoInicial, datos }) {
     </nav>
     {mensaje && <p className="operation-success" role="status">{mensaje}</p>}
     <div className="toolbar">
-      <div className="search">
-        <label htmlFor="buscar-registro" className="visually-hidden">Buscar en {modulo.titulo.toLowerCase()}</label>
-        <input id="buscar-registro" type="search" className="form-control" placeholder={`Buscar en ${modulo.titulo.toLowerCase()}`} value={busqueda} onChange={evento => setBusqueda(evento.target.value)} />
-      </div>
-      {!esCatalogo && <a className="btn btn-light" href={`/api/registros/${tipo}/csv`}>Descargar CSV</a>}
-      <button type="button" className="btn btn-primary" onClick={() => abrir()} disabled={actualizando}>{modulo.crear}</button>
+      <BuscarOperacion id="buscar-registro" etiqueta={`Buscar en ${modulo.titulo.toLowerCase()}`}
+        placeholder={`Buscar en ${modulo.titulo.toLowerCase()}…`} value={busqueda} onChange={evento => setBusqueda(evento.target.value)} />
+      {!esCatalogo && <BotonOperacion href={`/api/registros/${tipo}/csv`}>Descargar CSV</BotonOperacion>}
+      <BotonOperacion principal icono="agregar" onClick={() => abrir()} disabled={actualizando}>{modulo.crear}</BotonOperacion>
     </div>
-    <article className="panel">
-      <div className="panel-heading"><h2>{modulo.titulo}</h2><span>{filas.length} {filas.length === 1 ? 'registro' : 'registros'}</span></div>
-      {filas.length ? <div className="table-responsive"><table className="table align-middle">
-        <thead><tr>{modulo.columnas.map(columna => <th key={columna} scope="col">{columna}</th>)}{esCatalogo && <th scope="col">Acciones</th>}</tr></thead>
-        <tbody>{filas.map(({ item, celdas }) => <tr key={item.id}>
+    <PanelOperacion id="listado-operacion" titulo={modulo.titulo} contador={`${filas.length} ${filas.length === 1 ? 'registro' : 'registros'}`}>
+      {filas.length ? <TablaOperacion etiqueta="listado-operacion" columnas={[...modulo.columnas, ...(esCatalogo ? ['Acciones'] : [])]}>
+        {filas.map(({ item, celdas }) => <tr key={item.id}>
           {celdas.map((valor, indice) => <td key={modulo.columnas[indice]} data-label={modulo.columnas[indice]}>
-            {indice === 0 ? <strong>{valor}</strong> : <span className={modulo.columnas[indice] === 'Detalle' ? 'record-detail' : undefined}>{valor}</span>}
+            {modulo.columnas[indice] === 'Estado' ? <EstadoOperacion estado={modulo.estado(item)}>{valor}</EstadoOperacion>
+              : indice === 0 ? <strong>{valor}</strong> : <span className={modulo.columnas[indice] === 'Detalle' ? 'record-detail' : undefined}>{valor}</span>}
           </td>)}
-          {esCatalogo && <td data-label="Acciones"><button type="button" className="btn btn-light btn-sm" disabled={actualizando} onClick={() => abrir(item)}>Editar</button></td>}
-        </tr>)}</tbody>
-      </table></div> : <p className="empty-state" role="status">{busqueda ? 'No hay registros que coincidan con la búsqueda.' : 'Todavía no hay registros en esta sección.'}</p>}
-    </article>
+          {esCatalogo && <td data-label="Acciones"><BotonOperacion compacto disabled={actualizando} onClick={() => abrir(item)}>Editar</BotonOperacion></td>}
+        </tr>)}
+      </TablaOperacion> : <VacioOperacion icono={busqueda ? undefined : modulo.icono}>{busqueda ? 'No hay registros que coincidan con la búsqueda.' : modulo.vacio}</VacioOperacion>}
+    </PanelOperacion>
     <Dialogo abierto={!!formulario} titulo={titulo} ocupado={ocupado || calculando} cerrar={() => setFormulario(null)}>
       {formulario && <form onSubmit={guardar} onChange={cambiarRuta} aria-busy={ocupado || calculando}>
         <fieldset disabled={ocupado || calculando}>

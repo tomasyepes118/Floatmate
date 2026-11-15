@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import Dialogo from './Dialogo';
 import Campo from './Campo';
 import { enviarAccion } from '../lib/api';
-import { estadosVehiculo, tiposVehiculo, normalizar, numero, claseEstado } from '../lib/presentacion';
+import { estadosVehiculo, tiposVehiculo, normalizar, numero } from '../lib/presentacion';
+import { BotonOperacion, BuscarOperacion, EstadoOperacion, FiltroEstado, PanelOperacion, TablaOperacion, TituloPagina, VacioOperacion } from './InterfazOperacion';
 
 export default function Vehiculos({ iniciales, puedeEditar }) {
   const router = useRouter();
@@ -51,29 +52,27 @@ export default function Vehiculos({ iniciales, puedeEditar }) {
   }
 
   return <>
-    <div className="page-title"><h1>Vehículos</h1><p>Consulta, registra y actualiza los buses de tu flota.</p></div>
+    <TituloPagina titulo="Vehículos" descripcion="Consulta, registra y actualiza los buses de tu flota." />
     {mensaje && <p role="status" className="operation-success">{mensaje}</p>}
     <div className="toolbar">
-      <div className="search"><label htmlFor="buscar-vehiculo" className="visually-hidden">Buscar vehículo</label><input id="buscar-vehiculo" type="search" className="form-control" placeholder="Buscar placa o marca..." value={busqueda} onChange={e => setBusqueda(e.target.value)} /></div>
-      <label className="visually-hidden" htmlFor="estado-vehiculo">Filtrar vehículos por estado</label><select id="estado-vehiculo" className="form-select" value={estado} onChange={e => setEstado(e.target.value)}><option value="">Todos los estados</option>{Object.entries(estadosVehiculo).map(([valor,texto]) => <option key={valor} value={valor}>{texto}</option>)}</select>
-      {puedeEditar && <button type="button" className="btn btn-primary" onClick={() => abrir()} disabled={actualizando}>Registrar vehículo</button>}
+      <BuscarOperacion id="buscar-vehiculo" etiqueta="Buscar vehículo" placeholder="Buscar placa o marca…" value={busqueda} onChange={e => setBusqueda(e.target.value)} />
+      <FiltroEstado id="estado-vehiculo" etiqueta="Filtrar vehículos por estado" opciones={estadosVehiculo} value={estado} onChange={e => setEstado(e.target.value)} />
+      {puedeEditar && <BotonOperacion principal icono="agregar" onClick={() => abrir()} disabled={actualizando}>Registrar vehículo</BotonOperacion>}
     </div>
-    <article className="panel">
-      <div className="panel-heading"><h2>Inventario de vehículos</h2><span role="status">{lista.length} {lista.length===1 ? 'vehículo' : 'vehículos'}</span></div>
-      {lista.length ? <div className="table-responsive"><table className="table align-middle">
-        <thead><tr><th>Placa</th><th>Modelo</th><th>Capacidad</th><th>Kilometraje</th><th>Estado</th>{puedeEditar && <th>Acciones</th>}</tr></thead>
-        <tbody>{lista.map(v => <tr key={v.id}>
+    <PanelOperacion id="inventario-vehiculos" titulo="Inventario de vehículos" contador={`${lista.length} ${lista.length === 1 ? 'vehículo' : 'vehículos'}`}>
+      {lista.length ? <TablaOperacion etiqueta="inventario-vehiculos" columnas={['Placa', 'Modelo', 'Capacidad', 'Kilometraje', 'Estado', ...(puedeEditar ? ['Acciones'] : [])]}>
+        {lista.map(v => <tr key={v.id}>
           <td data-label="Placa"><strong>{v.placa}</strong><small>{v.codigo}</small></td>
           <td data-label="Modelo"><div>{v.marca} {v.modelo}<small>{tiposVehiculo[v.tipo]}</small></div></td>
           <td data-label="Capacidad">{v.capacidad} pasajeros</td>
           <td data-label="Kilometraje">{numero(v.kilometraje)} km</td>
-          <td data-label="Estado"><span className={`status status-${claseEstado(v.estado)}`}>{estadosVehiculo[v.estado]}</span></td>
-          {puedeEditar && <td data-label="Acciones"><button type="button" className="btn btn-light btn-sm" onClick={() => abrir(v)} disabled={actualizando}>Editar</button></td>}
-        </tr>)}</tbody>
-      </table></div> : <p className="empty-state" role="status">{iniciales.length === 0
+          <td data-label="Estado"><EstadoOperacion estado={v.estado}>{estadosVehiculo[v.estado]}</EstadoOperacion></td>
+          {puedeEditar && <td data-label="Acciones"><BotonOperacion compacto onClick={() => abrir(v)} disabled={actualizando}>Editar</BotonOperacion></td>}
+        </tr>)}
+      </TablaOperacion> : <VacioOperacion icono={iniciales.length === 0 ? 'vehiculos' : undefined}>{iniciales.length === 0
         ? (puedeEditar ? 'Todavía no hay vehículos. Pulsa Registrar vehículo para agregar el primero.' : 'Todavía no hay vehículos registrados.')
-        : 'No hay vehículos que coincidan con la búsqueda.'}</p>}
-    </article>
+        : 'No hay vehículos que coincidan con la búsqueda.'}</VacioOperacion>}
+    </PanelOperacion>
     <Dialogo abierto={!!formulario} titulo={titulo} cerrar={() => setFormulario(null)} ocupado={ocupado}>
       {formulario && <form onSubmit={guardar} onChange={evento => { const nombre=evento.target.name; setError(''); setErrores(actuales => { const copia={...actuales}; delete copia[nombre]; return copia; }); }} aria-busy={ocupado}>
         <fieldset disabled={ocupado}>
