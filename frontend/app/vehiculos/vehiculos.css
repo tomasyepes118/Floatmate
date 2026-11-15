@@ -1,0 +1,71 @@
+.operacion .inventario-vehiculos {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.vehiculos-cuadricula {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+
+.vehiculo-tarjeta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 0 16px 11px;
+  border: 1px solid var(--panel-borde);
+  border-radius: 15px;
+  background: #fcfcf8;
+}
+
+.vehiculo-imagen {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 2.15;
+  max-height: 186px;
+  margin: 0 -16px;
+  padding: 12px 18px 8px;
+  border-radius: 14px 14px 0 0;
+  background: linear-gradient(var(--panel-marfil), #fcfcf8);
+}
+
+.vehiculo-imagen img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
+  object-position: center;
+}
+
+.vehiculo-imagen > svg { width: 42px; height: 42px; color: var(--panel-secundario); }
+.vehiculo-identidad { flex: 1; padding-top: 4px; overflow-wrap: anywhere; }
+.vehiculo-encabezado { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; }
+.vehiculo-encabezado h3 { margin: 0; font-size: 23px; font-weight: 800; letter-spacing: -.035em; }
+.vehiculo-modelo { margin: 3px 0; font-weight: 550; }
+.vehiculo-tipo { margin: 0; color: var(--panel-secundario); font-size: 13px; }
+
+.vehiculo-pie {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px 12px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--panel-borde);
+}
+
+.vehiculo-pie dl { display: flex; flex-wrap: wrap; gap: 6px 12px; margin: 0; }
+.vehiculo-pie dd { display: flex; align-items: center; gap: 5px; margin: 0; font-size: 13px; font-variant-numeric: tabular-nums; }
+.vehiculo-pie dd svg { flex: none; width: 17px; height: 17px; color: var(--panel-secundario); }
+.vehiculo-pie .btn { margin-inline-start: auto; padding: 5px 9px; font-size: 13px; }
+
+@media (min-width: 640px) {
+  .vehiculos-cuadricula { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1180px) {
+  .vehiculos-cuadricula { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
