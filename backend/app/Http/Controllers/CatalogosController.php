@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\RepositorioDemo;
+use App\Services\MunicipiosAntioquia;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -13,13 +14,13 @@ class CatalogosController extends Controller
 {
     public const TIPOS = ['rutas', 'conductores'];
 
-    public function index(Request $request, RepositorioDemo $repositorio): JsonResponse
+    public function index(Request $request, RepositorioDemo $repositorio, MunicipiosAntioquia $municipios): JsonResponse
     {
-        return response()->json(['usuario'=>$request->session()->get('usuario_demo')]
+        return response()->json(['usuario'=>$request->session()->get('usuario_demo'), 'municipios'=>$municipios->todos()]
             + array_intersect_key($repositorio->leer(), array_flip(self::TIPOS)));
     }
 
-    public function guardar(Request $request, RepositorioDemo $repositorio, string $tipo, ?int $id = null): JsonResponse
+    public function guardar(Request $request, RepositorioDemo $repositorio, MunicipiosAntioquia $municipios, string $tipo, ?int $id = null): JsonResponse
     {
         $entrada = $request->all();
         foreach (['codigo', 'nombre', 'origen', 'destino'] as $campo) {
@@ -71,7 +72,8 @@ class CatalogosController extends Controller
             }
         }
 
-        $item = $repositorio->modificar(function (array &$flota) use ($tipo, $id, $datos, $revision): array {
+        $nombres = $tipo === 'rutas' ? array_column($municipios->todos(), 'nombre') : [];
+        $item = $repositorio->modificar(function (array &$flota) use ($tipo, $id, $datos, $revision, $nombres): array {
             $items = &$flota[$tipo];
             if ($tipo === 'rutas') {
                 foreach ($items as $ruta) {
@@ -81,6 +83,7 @@ class CatalogosController extends Controller
                 }
             }
             if ($id === null) {
+                if ($tipo === 'rutas') $this->validarMunicipios($datos, $nombres);
                 $item = ['id'=>max([0, ...array_column($items, 'id')]) + 1, 'revision'=>0] + $datos;
                 $items[] = $item;
                 return $item;
@@ -90,6 +93,7 @@ class CatalogosController extends Controller
             abort_if($posicion === false, 404, 'No encontramos este registro.');
             $actual = $items[$posicion];
             abort_if($revision !== ($actual['revision'] ?? 0), 409, 'El registro cambió. Recarga la página y vuelve a intentarlo.');
+            if ($tipo === 'rutas') $this->validarMunicipios($datos, $nombres, $actual);
             $referencia = $tipo === 'rutas' ? 'ruta_id' : 'conductor_id';
             foreach ($flota['viajes'] as $viaje) {
                 if ($viaje[$referencia] !== $id) continue;
@@ -114,5 +118,14 @@ class CatalogosController extends Controller
         });
 
         return response()->json(['message'=>'Registro guardado.', 'item'=>$item], $id === null ? 201 : 200);
+    }
+
+    private function validarMunicipios(array $datos, array $nombres, array $actual = []): void
+    {
+        foreach (['origen', 'destino'] as $campo) {
+            if ($datos[$campo] !== ($actual[$campo] ?? null) && !in_array($datos[$campo], $nombres, true)) {
+                throw ValidationException::withMessages([$campo=>'Selecciona un municipio de Antioquia.']);
+            }
+        }
     }
 }
