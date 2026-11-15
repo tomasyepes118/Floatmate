@@ -468,6 +468,7 @@ try {
   await portal.getByText('Asignación confirmada', { exact:true }).waitFor();
   await pagina.getByRole('link', { name:'Viajes', exact:true }).click();
   const viajeCarlos = pagina.getByRole('row').filter({ hasText:'V-9001' });
+  await viajeCarlos.getByText('Confirmado por conductor', { exact:true }).waitFor();
   comprobar('La confirmación del conductor aparece en el despacho',
     await viajeCarlos.getByText('Confirmado por conductor', { exact:true }).isVisible());
   await viajeCarlos.getByRole('button', { name:'Registrar control', exact:true }).click();
